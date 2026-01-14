@@ -5,7 +5,7 @@
 /* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL */
 @layer base {
   body {
-    @apply bg-gradient-to-br from-white via-gray-50 to-gray-100;
+    @apply bg-gradient-to-br from-white via-green-50 to-green-100;
   }
 }
 @layer utilities {
@@ -24,7 +24,33 @@
   .gradient-border {
     position: relative;
     background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, #6b7280 0%, #374151 100%) border-box;
+                linear-gradient(135deg, #16a34a 0%, #15803d 100%) border-box;
     border: 2px solid transparent;
+  }
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  .animate-scroll {
+    animation: scroll 30s linear infinite;
+  }
+  @keyframes parliament-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

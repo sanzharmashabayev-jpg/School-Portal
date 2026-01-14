@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { AdminModal } from '../components/Admin/AdminModal';
 import { PlusIcon, EditIcon, TrashIcon, SearchIcon, FilterIcon, BellIcon } from 'lucide-react';
-interface Announcement {
-  id: number;
-  title: string;
-  content: string;
-  type: 'info' | 'warning' | 'event';
-  date: string;
-  from: string;
-}
+import { useData, Announcement } from '../contexts/DataContext';
+
 export function AdminAnnouncements() {
+  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
@@ -23,29 +18,9 @@ export function AdminAnnouncements() {
     type: 'info' as 'info' | 'warning' | 'event',
     from: ''
   });
-  const [announcements, setAnnouncements] = useState<Announcement[]>([{
-    id: 1,
-    title: 'Изменение в расписании на 25 октября',
-    content: 'В связи с проведением педагогического совета занятия 25 октября будут сокращены. Уроки будут идти по 30 минут.',
-    type: 'info',
-    date: '2024-01-20',
-    from: 'Учебная часть'
-  }, {
-    id: 2,
-    title: 'Важно: Профилактика гриппа и ОРВИ',
-    content: 'Уважаемые родители и ученики! В связи с сезонным подъемом заболеваемости просим соблюдать меры профилактики.',
-    type: 'warning',
-    date: '2024-01-18',
-    from: 'Медицинская служба'
-  }]);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newItem: Announcement = {
-      id: announcements.length + 1,
-      ...newAnnouncement,
-      date: new Date().toISOString().split('T')[0]
-    };
-    setAnnouncements([newItem, ...announcements]);
+    addAnnouncement(newAnnouncement);
     setShowAddModal(false);
     setNewAnnouncement({
       title: '',
@@ -67,10 +42,7 @@ export function AdminAnnouncements() {
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAnnouncement) return;
-    setAnnouncements(announcements.map(item => item.id === selectedAnnouncement.id ? {
-      ...item,
-      ...newAnnouncement
-    } : item));
+    updateAnnouncement(selectedAnnouncement.id, newAnnouncement);
     setShowEditModal(false);
     setSelectedAnnouncement(null);
     setNewAnnouncement({
@@ -82,7 +54,7 @@ export function AdminAnnouncements() {
   };
   const handleDelete = (id: number) => {
     if (confirm('Вы уверены, что хотите удалить это объявление?')) {
-      setAnnouncements(announcements.filter(item => item.id !== id));
+      deleteAnnouncement(id);
     }
   };
   const filteredAnnouncements = announcements.filter(announcement => {
@@ -90,6 +62,10 @@ export function AdminAnnouncements() {
     const matchesFilter = filterType === 'all' || announcement.type === filterType;
     return matchesSearch && matchesFilter;
   });
+  const handleAnnouncementFieldChange = useCallback((field: keyof typeof newAnnouncement) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setNewAnnouncement(prev => ({ ...prev, [field]: e.target.value }));
+  }, []);
+
   const AnnouncementForm = ({
     onSubmit,
     isEdit = false
@@ -98,48 +74,36 @@ export function AdminAnnouncements() {
     isEdit?: boolean;
   }) => <form onSubmit={onSubmit} className="p-6 space-y-6">
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-green-700 mb-2">
           Заголовок *
         </label>
-        <input type="text" value={newAnnouncement.title} onChange={e => setNewAnnouncement({
-        ...newAnnouncement,
-        title: e.target.value
-      })} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Введите заголовок объявления" required />
+        <input type="text" value={newAnnouncement.title} onChange={handleAnnouncementFieldChange('title')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Введите заголовок объявления" required />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-green-700 mb-2">
           Содержание *
         </label>
-        <textarea value={newAnnouncement.content} onChange={e => setNewAnnouncement({
-        ...newAnnouncement,
-        content: e.target.value
-      })} rows={8} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Введите содержание объявления" required />
+        <textarea value={newAnnouncement.content} onChange={handleAnnouncementFieldChange('content')} rows={8} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Введите содержание объявления" required />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-green-700 mb-2">
             Тип объявления *
           </label>
-          <select value={newAnnouncement.type} onChange={e => setNewAnnouncement({
-          ...newAnnouncement,
-          type: e.target.value as 'info' | 'warning' | 'event'
-        })} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
+          <select value={newAnnouncement.type} onChange={handleAnnouncementFieldChange('type')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
             <option value="info">Информация</option>
             <option value="warning">Важно</option>
             <option value="event">Событие</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-green-700 mb-2">
             От кого *
           </label>
-          <input type="text" value={newAnnouncement.from} onChange={e => setNewAnnouncement({
-          ...newAnnouncement,
-          from: e.target.value
-        })} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Администрация школы" required />
+          <input type="text" value={newAnnouncement.from} onChange={handleAnnouncementFieldChange('from')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Администрация школы" required />
         </div>
       </div>
-      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+      <div className="flex justify-end space-x-3 pt-4 border-t border-green-200">
         <Button type="button" variant="outline" onClick={() => {
         if (isEdit) {
           setShowEditModal(false);
@@ -163,10 +127,10 @@ export function AdminAnnouncements() {
   return <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-green-900">
             Управление объявлениями
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-green-600">
             Всего объявлений: {announcements.length}
           </p>
         </div>
@@ -178,12 +142,12 @@ export function AdminAnnouncements() {
         <div className="p-6 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="text" placeholder="Поиск объявлений..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
+              <input type="text" placeholder="Поиск объявлений..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-green-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
             </div>
             <div className="flex items-center space-x-2">
-              <FilterIcon className="h-5 w-5 text-gray-400" />
-              <select value={filterType} onChange={e => setFilterType(e.target.value as typeof filterType)} className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+              <FilterIcon className="h-5 w-5 text-green-500" />
+              <select value={filterType} onChange={e => setFilterType(e.target.value as typeof filterType)} className="px-4 py-3 border border-green-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
                 <option value="all">Все типы</option>
                 <option value="info">Информация</option>
                 <option value="warning">Важно</option>
@@ -196,8 +160,8 @@ export function AdminAnnouncements() {
       <div className="space-y-4">
         {filteredAnnouncements.length === 0 ? <Card>
             <div className="p-12 text-center">
-              <BellIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Объявлений не найдено</p>
+              <BellIcon className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <p className="text-green-600">Объявлений не найдено</p>
             </div>
           </Card> : filteredAnnouncements.map(announcement => <Card key={announcement.id} hover>
               <div className="p-6">
@@ -207,15 +171,15 @@ export function AdminAnnouncements() {
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${announcement.type === 'warning' ? 'bg-amber-100 text-amber-800' : announcement.type === 'event' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                         {announcement.type === 'warning' ? 'Важно' : announcement.type === 'event' ? 'Событие' : 'Информация'}
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-green-600">
                         {announcement.date}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-xl font-bold text-green-900 mb-2">
                       {announcement.title}
                     </h3>
-                    <p className="text-gray-600 mb-2">{announcement.content}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-green-600 mb-2">{announcement.content}</p>
+                    <p className="text-sm text-green-600">
                       От: {announcement.from}
                     </p>
                   </div>

@@ -21,7 +21,7 @@ export function MetallicLogo() {
   }, []);
   if (isLoading || !imageData) {
     return <div className="h-28 w-56 flex items-center justify-center">
-        <div className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-gray-900 font-bold text-2xl">
+        <div className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900 font-bold text-2xl">
           Shoqan Portal
         </div>
       </div>;

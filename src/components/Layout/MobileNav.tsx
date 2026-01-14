@@ -37,7 +37,7 @@ export function MobileNav({
   }];
   if (!isOpen) return null;
   return <div className="fixed inset-0 flex z-40 md:hidden">
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={onClose}></div>
+      <div className="fixed inset-0 bg-green-600 bg-opacity-75" onClick={onClose}></div>
       <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
         <div className="absolute top-0 right-0 -mr-12 pt-2">
           <button type="button" className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" onClick={onClose}>
@@ -54,21 +54,21 @@ export function MobileNav({
           <nav className="mt-5 px-2 space-y-1">
             {navigation.map(item => {
             const isActive = location.pathname === item.href;
-            return <Link key={item.name} to={item.href} className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'}`} onClick={onClose}>
-                  <item.icon className={`mr-4 h-6 w-6 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+            return <Link key={item.name} to={item.href} className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive ? 'bg-blue-50 text-blue-600' : 'text-green-700 hover:bg-green-100'}`} onClick={onClose}>
+                  <item.icon className={`mr-4 h-6 w-6 ${isActive ? 'text-blue-600' : 'text-green-600'}`} />
                   {item.name}
                 </Link>;
           })}
           </nav>
         </div>
-        <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+        <div className="flex-shrink-0 flex border-t border-green-200 p-4">
           <div className="flex items-center">
             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
               <UserIcon className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-3">
-              <p className="text-base font-medium text-gray-700">Иван Иванов</p>
-              <p className="text-sm text-gray-500">Ученик</p>
+              <p className="text-base font-medium text-green-700">Иван Иванов</p>
+              <p className="text-sm text-green-600">Ученик</p>
             </div>
           </div>
         </div>

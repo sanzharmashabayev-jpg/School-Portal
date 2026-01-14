@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout/Layout';
 import { AdminLayout } from './components/Admin/AdminLayout';
@@ -16,49 +16,44 @@ import { AdminNews } from './pages/AdminNews';
 import { AdminEvents } from './pages/AdminEvents';
 import { AdminPolls } from './pages/AdminPolls';
 import { AdminAnnouncements } from './pages/AdminAnnouncements';
+import { useAuth } from './contexts/AuthContext';
+
 function ProtectedRoute({
   children
 }: {
   children: React.ReactNode;
 }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(authStatus === 'true');
-    setIsLoading(false);
-  }, []);
-  if (isLoading) {
-    return <div className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-gray-100 flex items-center justify-center">
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen w-full bg-gradient-to-br from-white via-green-50 to-green-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-gray-800 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Загрузка...</p>
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-800 border-r-transparent"></div>
+          <p className="mt-4 text-green-600">Загрузка...</p>
         </div>
       </div>;
   }
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+
+  return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
+
 function AdminProtectedRoute({
   children
 }: {
   children: React.ReactNode;
 }) {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const adminAuthStatus = localStorage.getItem('isAdminAuthenticated');
-    setIsAdminAuthenticated(adminAuthStatus === 'true');
-    setIsLoading(false);
-  }, []);
-  if (isLoading) {
-    return <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+  const { user, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen w-full bg-gradient-to-br from-green-900 via-green-800 to-green-900 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-600 border-r-transparent"></div>
-          <p className="mt-4 text-gray-300">Загрузка...</p>
+          <p className="mt-4 text-green-400">Загрузка...</p>
         </div>
       </div>;
   }
-  return isAdminAuthenticated ? <>{children}</> : <Navigate to="/admin/login" replace />;
+
+  return user && isAdmin ? <>{children}</> : <Navigate to="/admin/login" replace />;
 }
 export function App() {
   return <Router>

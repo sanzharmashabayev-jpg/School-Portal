@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HomeIcon, NewspaperIcon, CalendarIcon, VoteIcon, BellIcon, UserIcon, LogOutIcon } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const navigation = [{
     name: 'Главная',
     href: '/portal',
@@ -29,14 +32,14 @@ export function Sidebar() {
     href: '/portal/profile',
     icon: UserIcon
   }];
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
-  return <div className="w-72 glass-effect h-full border-r border-gray-200 flex flex-col shadow-xl">
-      <div className="p-6 border-b border-gray-200">
+  return <div className="w-72 glass-effect h-full border-r border-green-200 flex flex-col shadow-xl">
+      <div className="p-6 border-b border-green-200">
         <Link to="/" className="flex items-center">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-gray-900 font-bold text-2xl">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900 font-bold text-2xl">
             Shoqan Portal
           </span>
         </Link>
@@ -46,7 +49,7 @@ export function Sidebar() {
           {navigation.map(item => {
           const isActive = location.pathname === item.href;
           return <li key={item.name}>
-                <Link to={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all ${isActive ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-500/50' : 'text-gray-700 hover:bg-white/50 hover:shadow-md'}`}>
+                <Link to={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all ${isActive ? 'bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg shadow-green-600/50' : 'text-green-700 hover:bg-white/50 hover:shadow-md'}`}>
                   <item.icon className="mr-3 h-5 w-5" />
                   {item.name}
                 </Link>
@@ -54,14 +57,14 @@ export function Sidebar() {
         })}
         </ul>
       </nav>
-      <div className="p-4 border-t border-gray-200 m-3 space-y-3">
-        <div className="flex items-center p-3 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-md transition-shadow">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center shadow-lg">
+      <div className="p-4 border-t border-green-200 m-3 space-y-3">
+        <div className="flex items-center p-3 rounded-xl bg-gradient-to-br from-green-50 to-green-100 hover:shadow-md transition-shadow">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center shadow-lg">
             <UserIcon className="h-5 w-5 text-white" />
           </div>
           <div className="ml-3">
-            <p className="text-sm font-semibold text-gray-800">Иван Иванов</p>
-            <p className="text-xs text-gray-600">Ученик</p>
+            <p className="text-sm font-semibold text-green-800">{user?.user_metadata?.full_name || user?.email || 'Пользователь'}</p>
+            <p className="text-xs text-green-600">{user?.user_metadata?.role || 'Ученик'}</p>
           </div>
         </div>
         <button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all">

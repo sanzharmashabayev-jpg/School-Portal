@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/UI/Button';
+import { ParliamentCarousel } from '../components/UI/ParliamentCarousel';
 import { SparklesIcon, BellIcon, CalendarIcon, BarChartIcon, ShieldCheckIcon, ZapIcon, UsersIcon, TrendingUpIcon, ArrowRightIcon } from 'lucide-react';
 import { ScrollVelocity } from '../components/ScrollVelocity';
 import { motion } from 'framer-motion';
@@ -10,22 +11,22 @@ export function Landing() {
     icon: SparklesIcon,
     title: 'Умные уведомления',
     description: 'Персонализированные оповещения о важных событиях и новостях школы',
-    color: 'from-gray-700 to-gray-900'
+    color: 'from-green-700 to-green-900'
   }, {
     icon: CalendarIcon,
     title: 'Единый календарь',
     description: 'Все школьные события и мероприятия в одном удобном календаре',
-    color: 'from-gray-600 to-gray-800'
+    color: 'from-green-600 to-green-800'
   }, {
     icon: BarChartIcon,
     title: 'Аналитика и статистика',
     description: 'Отслеживайте участие и вовлеченность в школьную жизнь',
-    color: 'from-gray-500 to-gray-700'
+    color: 'from-green-600 to-green-700'
   }, {
     icon: ShieldCheckIcon,
     title: 'Безопасность данных',
     description: 'Современная защита личной информации всех участников',
-    color: 'from-gray-800 to-black'
+    color: 'from-green-800 to-black'
   }];
   const stats = [{
     value: '5000+',
@@ -40,7 +41,7 @@ export function Landing() {
     value: '24/7',
     label: 'Поддержка'
   }];
-  return <div className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-gray-100 overflow-hidden">
+  return <div className="min-h-screen w-full bg-gradient-to-br from-white via-green-50 to-green-100 overflow-hidden">
       {/* Header */}
       <motion.header initial={{
       y: -100
@@ -49,7 +50,7 @@ export function Landing() {
     }} transition={{
       type: 'spring',
       stiffness: 100
-    }} className="glass-effect border-b border-gray-200 sticky top-0 z-50 backdrop-blur-xl">
+    }} className="glass-effect border-b border-green-200 sticky top-0 z-50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <motion.div initial={{
@@ -98,7 +99,7 @@ export function Landing() {
             y: 0
           }} transition={{
             delay: 0.3
-          }} className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 font-semibold text-sm mb-8 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+          }} className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-100 to-green-200 text-green-800 font-semibold text-sm mb-8 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
               <SparklesIcon className="h-4 w-4 mr-2 animate-pulse" />
               Инновационная платформа для школ
             </motion.div>
@@ -110,7 +111,7 @@ export function Landing() {
             y: 0
           }} transition={{
             delay: 0.4
-          }} className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-gray-900 mb-6">
+          }} className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900 mb-6">
               Будущее школьного
               <br />
               взаимодействия
@@ -123,7 +124,7 @@ export function Landing() {
             y: 0
           }} transition={{
             delay: 0.5
-          }} className="text-xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+          }} className="text-xl text-green-600 max-w-3xl mx-auto mb-12 leading-relaxed">
               Революционная платформа, которая объединяет учеников, учителей и
               родителей в единое цифровое пространство. Следите за новостями,
               участвуйте в опросах и будьте в курсе всех событий.
@@ -157,7 +158,7 @@ export function Landing() {
         duration: 8,
         repeat: Infinity,
         ease: 'easeInOut'
-      }} className="absolute top-20 left-10 w-72 h-72 bg-gray-300 rounded-full mix-blend-multiply filter blur-3xl"></motion.div>
+      }} className="absolute top-20 left-10 w-72 h-72 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl"></motion.div>
         <motion.div animate={{
         scale: [1, 1.3, 1],
         opacity: [0.2, 0.3, 0.2]
@@ -166,7 +167,7 @@ export function Landing() {
         repeat: Infinity,
         ease: 'easeInOut',
         delay: 1
-      }} className="absolute top-40 right-10 w-72 h-72 bg-gray-400 rounded-full mix-blend-multiply filter blur-3xl"></motion.div>
+      }} className="absolute top-40 right-10 w-72 h-72 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl"></motion.div>
       </section>
       {/* Stats Section */}
       <section className="py-16 bg-white/50 backdrop-blur-sm">
@@ -194,10 +195,10 @@ export function Landing() {
             }} transition={{
               delay: index * 0.1 + 0.2,
               type: 'spring'
-            }} className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-gray-900 mb-2">
+            }} className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900 mb-2">
                   {stat.value}
                 </motion.div>
-                <div className="text-sm text-gray-600 font-medium">
+                <div className="text-sm text-green-600 font-medium">
                   {stat.label}
                 </div>
               </motion.div>)}
@@ -216,10 +217,10 @@ export function Landing() {
         }} viewport={{
           once: true
         }} className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-green-900 mb-4">
               Почему Shoqan Portal?
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-green-600 max-w-2xl mx-auto">
               Современные технологии для эффективного взаимодействия в
               образовательной среде
             </p>
@@ -238,7 +239,7 @@ export function Landing() {
           }} whileHover={{
             y: -10,
             scale: 1.02
-          }} className="glass-effect rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer">
+          }} className="glass-effect rounded-2xl p-8 border border-green-200 shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer">
                 <motion.div whileHover={{
               rotate: 360,
               scale: 1.1
@@ -247,18 +248,66 @@ export function Landing() {
             }} className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg mb-6 group-hover:shadow-xl`}>
                   <feature.icon className="h-7 w-7 text-white" />
                 </motion.div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gray-700 transition-colors">
+                <h3 className="text-xl font-bold text-green-900 mb-3 group-hover:text-green-700 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-green-600 leading-relaxed">
                   {feature.description}
                 </p>
               </motion.div>)}
           </div>
         </div>
       </section>
+      {/* School Parliament Section */}
+      <section className="py-12 bg-white/50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-6"
+          >
+            <h3 className="text-xl font-bold text-green-900 mb-1">
+              Школьный парламент
+            </h3>
+            <p className="text-green-600 text-xs">
+              Представители ученического самоуправления
+            </p>
+          </motion.div>
+          
+          <ParliamentCarousel
+            members={[
+              { name: 'САТЫБАЛДИНА ДАРИЯ', role: 'президент', isPresident: true },
+              { name: 'БАЙГАБАТ АЙЗАРА', role: 'заместитель', isVice: true },
+              { name: 'Чен Аким', role: 'министр права и порядка' },
+              { name: 'Шакир Анель' },
+              { name: 'Шемякин Марат' },
+              { name: 'Сабырбаева Карина' },
+              { name: 'Кайрат Зере', role: 'министр информации' },
+              { name: 'Айтубай Зере' },
+              { name: 'Арман Дамир' },
+              { name: 'Жанайдарова Амира' },
+              { name: 'Машабаев Санжар' },
+              { name: 'Омархан Абылай', role: 'министр спорта' },
+              { name: 'Нурали Уалихан' },
+              { name: 'Суйлемен Арон' },
+              { name: 'Куаныш Адель', role: 'министр социальных отношений' },
+              { name: 'Аюпова Индира' },
+              { name: 'Дамеля' },
+              { name: 'Асилбекова Малика', role: 'министр культуры' },
+              { name: 'Алтаева Сабила' },
+              { name: 'Оспан Инжу' },
+              { name: 'Каби Айя' },
+              { name: 'Сагатов Альнур', role: 'министр экологии' },
+              { name: 'Мухаметжан Адия' },
+              { name: 'Бостыбай Жания' },
+              { name: 'Жусипкызы Жасмин' },
+            ]}
+          />
+        </div>
+      </section>
       {/* Benefits Section */}
-      <section className="py-24 bg-gradient-to-r from-gray-800 to-gray-900 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-r from-green-800 to-green-900 relative overflow-hidden">
         <motion.div animate={{
         x: [0, 100, 0],
         y: [0, -50, 0]
@@ -318,7 +367,7 @@ export function Landing() {
                       <h3 className="text-xl font-semibold text-white mb-2">
                         {item.title}
                       </h3>
-                      <p className="text-gray-300">{item.desc}</p>
+                      <p className="text-green-400">{item.desc}</p>
                     </div>
                   </motion.div>)}
               </div>
@@ -333,7 +382,7 @@ export function Landing() {
             once: true
           }} whileHover={{
             scale: 1.05
-          }} className="glass-effect rounded-3xl p-8 border border-gray-200 shadow-2xl overflow-hidden">
+          }} className="glass-effect rounded-3xl p-8 border border-green-200 shadow-2xl overflow-hidden">
               <img src="/DJI_03282_1756359356.jpg" alt="School campus aerial view" className="rounded-2xl shadow-lg w-full h-full object-cover" />
             </motion.div>
           </div>
@@ -350,10 +399,10 @@ export function Landing() {
       }} viewport={{
         once: true
       }} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl font-bold text-green-900 mb-6">
             Готовы начать?
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-green-600 mb-8">
             Присоединяйтесь к тысячам школ, которые уже используют Shoqan Portal
           </p>
           <Link to="/login">
@@ -365,13 +414,13 @@ export function Landing() {
         </motion.div>
       </section>
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-green-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-400 to-gray-500 font-bold text-2xl">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-600 font-bold text-2xl">
               Shoqan Portal
             </span>
-            <p className="mt-4 text-gray-400">
+            <p className="mt-4 text-green-500">
               © 2024 Shoqan Portal. Все права защищены.
             </p>
             <p className="mt-3 text-white text-xl font-bold">
@@ -381,8 +430,8 @@ export function Landing() {
         </div>
       </footer>
       {/* Scroll Velocity Component */}
-      <div className="bg-gray-900 py-12">
-        <ScrollVelocity texts={['Инновации • Образование • Будущее •', 'Современные технологии • Эффективность • Развитие •']} velocity={50} className="text-gray-400" />
+      <div className="bg-green-900 py-12">
+        <ScrollVelocity texts={['Инновации • Образование • Будущее •', 'Современные технологии • Эффективность • Развитие •']} velocity={50} className="text-green-500" />
       </div>
     </div>;
 }

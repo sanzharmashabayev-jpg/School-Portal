@@ -9,7 +9,7 @@ export function Layout({
   children
 }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  return <div className="flex h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100">
+  return <div className="flex h-screen bg-gradient-to-br from-white via-green-50 to-green-100">
       {/* Sidebar for desktop */}
       <div className="hidden md:flex">
         <StaggeredMenu />
