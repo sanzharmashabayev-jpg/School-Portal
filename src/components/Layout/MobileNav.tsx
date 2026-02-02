@@ -30,10 +30,6 @@ export function MobileNav({
     name: 'Объявления',
     href: '/portal/announcements',
     icon: BellIcon
-  }, {
-    name: 'Профиль',
-    href: '/portal/profile',
-    icon: UserIcon
   }];
   if (!isOpen) return null;
   return <div className="fixed inset-0 flex z-40 md:hidden">
@@ -67,7 +63,6 @@ export function MobileNav({
               <UserIcon className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-3">
-              <p className="text-base font-medium text-green-700">Иван Иванов</p>
               <p className="text-sm text-green-600">Ученик</p>
             </div>
           </div>

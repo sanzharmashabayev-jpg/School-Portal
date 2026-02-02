@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { MenuIcon, BellIcon, UserIcon, LogOutIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MenuIcon, BellIcon, LogOutIcon } from 'lucide-react';
 import { MetallicLogo } from '../MetallicLogo';
 interface HeaderProps {
   onMenuClick: () => void;
@@ -28,11 +28,6 @@ export function Header({
             <BellIcon className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full ring-2 ring-white"></span>
           </button>
-          <Link to="/portal/profile" className="flex items-center">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
-              <UserIcon className="h-4 w-4 text-white" />
-            </div>
-          </Link>
           <button onClick={handleLogout} className="hidden md:flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all">
             <LogOutIcon className="h-4 w-4 mr-1" />
             Выйти

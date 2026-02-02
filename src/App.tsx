@@ -9,7 +9,6 @@ import { Home } from './pages/Home';
 import { News } from './pages/News';
 import { Events } from './pages/Events';
 import { Polls } from './pages/Polls';
-import { Profile } from './pages/Profile';
 import { Announcements } from './pages/Announcements';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminNews } from './pages/AdminNews';
@@ -69,7 +68,6 @@ export function App() {
                   <Route path="/events" element={<Events />} />
                   <Route path="/polls" element={<Polls />} />
                   <Route path="/announcements" element={<Announcements />} />
-                  <Route path="/profile" element={<Profile />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>} />

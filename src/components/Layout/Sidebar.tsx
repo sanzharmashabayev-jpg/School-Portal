@@ -27,10 +27,6 @@ export function Sidebar() {
     name: 'Объявления',
     href: '/portal/announcements',
     icon: BellIcon
-  }, {
-    name: 'Профиль',
-    href: '/portal/profile',
-    icon: UserIcon
   }];
   const handleLogout = async () => {
     await signOut();
@@ -63,7 +59,6 @@ export function Sidebar() {
             <UserIcon className="h-5 w-5 text-white" />
           </div>
           <div className="ml-3">
-            <p className="text-sm font-semibold text-green-800">{user?.user_metadata?.full_name || user?.email || 'Пользователь'}</p>
             <p className="text-xs text-green-600">{user?.user_metadata?.role || 'Ученик'}</p>
           </div>
         </div>

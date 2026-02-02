@@ -47,10 +47,6 @@ export function StaggeredMenu() {
     name: 'Объявления',
     href: '/portal/announcements',
     icon: BellIcon
-  }, {
-    name: 'Профиль',
-    href: '/portal/profile',
-    icon: UserIcon
   }];
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -100,7 +96,6 @@ export function StaggeredMenu() {
             <UserIcon className="h-5 w-5 text-white" />
           </div>
           <div className="ml-3">
-            <p className="text-sm font-semibold text-green-800">Иван Иванов</p>
             <p className="text-xs text-green-600">Ученик</p>
           </div>
         </div>

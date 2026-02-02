@@ -93,89 +93,11 @@ const STORAGE_KEYS = {
   ANNOUNCEMENTS: 'schoolportal_announcements'
 };
 
-// Default data
-const defaultNews: NewsItem[] = [
-    {
-      id: 1,
-      category: 'Школьные новости',
-      title: 'Победа нашей команды на городской олимпиаде по математике',
-      content: 'Наши ученики заняли первое место на городской олимпиаде по математике среди школ города.',
-      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b',
-      status: 'Опубликовано',
-      date: '2024-01-15',
-      author: 'Админ'
-    },
-    {
-      id: 2,
-      category: 'Мероприятия',
-      title: 'Школьный театр представляет новую постановку',
-      content: 'В эту пятницу школьный театр представит новую постановку по произведению А.П. Чехова.',
-      image: 'https://images.unsplash.com/photo-1503095396549-807759245b35',
-      status: 'Опубликовано',
-      date: '2024-01-14',
-      author: 'Админ'
-    }
-];
-
-const defaultEvents: Event[] = [
-    {
-      id: 1,
-      title: 'День открытых дверей',
-      type: 'school',
-      date: '2024-10-26',
-      time: '10:00 - 15:00',
-      location: 'Актовый зал',
-      description: 'Приглашаем всех родителей и будущих учеников познакомиться с нашей школой.',
-      status: 'Активно'
-    },
-    {
-      id: 2,
-      title: 'Городская олимпиада по математике',
-      type: 'olympiad',
-    subject: 'Математика',
-      date: '2024-11-12',
-      time: '10:00 - 13:00',
-      location: 'Гимназия №5',
-      description: 'Ежегодная городская олимпиада по математике для учеников 8-11 классов.',
-      status: 'Активно'
-    }
-];
-
-const defaultPolls: Poll[] = [
-    {
-      id: 1,
-      title: 'Какие кружки вы хотели бы видеть в школе?',
-      description: 'Помогите нам выбрать новые направления для внеклассных занятий.',
-      options: [
-        { text: 'Робототехника', votes: 45 },
-        { text: 'Программирование', votes: 38 },
-        { text: 'Театральный', votes: 22 },
-        { text: 'Шахматы', votes: 18 }
-      ],
-      status: 'Активен',
-      deadline: '2024-02-15',
-      totalVotes: 123
-    }
-];
-
-const defaultAnnouncements: Announcement[] = [
-    {
-      id: 1,
-      title: 'Изменение в расписании на 25 октября',
-      content: 'В связи с проведением педагогического совета занятия 25 октября будут сокращены. Уроки будут идти по 30 минут.',
-      type: 'info',
-      date: '2024-01-20',
-      from: 'Учебная часть'
-    },
-    {
-      id: 2,
-      title: 'Важно: Профилактика гриппа и ОРВИ',
-      content: 'Уважаемые родители и ученики! В связи с сезонным подъемом заболеваемости просим соблюдать меры профилактики.',
-      type: 'warning',
-      date: '2024-01-18',
-      from: 'Медицинская служба'
-    }
-];
+// Default data - пустые массивы для продакшена
+const defaultNews: NewsItem[] = [];
+const defaultEvents: Event[] = [];
+const defaultPolls: Poll[] = [];
+const defaultAnnouncements: Announcement[] = [];
 
 // Helper functions for localStorage
 function loadFromStorage<T>(key: string, defaultValue: T): T {
@@ -232,7 +154,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // News functions
   const addNews = (news: Omit<NewsItem, 'id' | 'date' | 'author'>) => {
-    const newId = Math.max(...newsItems.map(n => n.id), 0) + 1;
+    const newId = newsItems.length > 0 ? Math.max(...newsItems.map(n => n.id), 0) + 1 : 1;
     const now = new Date();
     const newItem: NewsItem = {
       ...news,
@@ -257,7 +179,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Events functions
   const addEvent = (event: Omit<Event, 'id'>) => {
-    const newId = Math.max(...events.map(e => e.id), 0) + 1;
+    const newId = events.length > 0 ? Math.max(...events.map(e => e.id), 0) + 1 : 1;
     const newItem: Event = {
       ...event,
       id: newId
@@ -279,7 +201,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Polls functions
   const addPoll = (poll: Omit<Poll, 'id' | 'totalVotes'>) => {
-    const newId = Math.max(...polls.map(p => p.id), 0) + 1;
+    const newId = polls.length > 0 ? Math.max(...polls.map(p => p.id), 0) + 1 : 1;
     const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
     const newItem: Poll = {
       ...poll,
@@ -332,7 +254,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Announcements functions
   const addAnnouncement = (announcement: Omit<Announcement, 'id' | 'date'>) => {
-    const newId = Math.max(...announcements.map(a => a.id), 0) + 1;
+    const newId = announcements.length > 0 ? Math.max(...announcements.map(a => a.id), 0) + 1 : 1;
     const now = new Date();
     const newItem: Announcement = {
       ...announcement,
