@@ -9,7 +9,7 @@ import { MetallicLogo } from '../components/MetallicLogo';
 export function Landing() {
   const features = [{
     icon: SparklesIcon,
-    title: 'Умные уведомления',
+    title: 'Уведомления',
     description: 'Персонализированные оповещения о важных событиях и новостях школы',
     color: 'from-green-700 to-green-900'
   }, {
@@ -29,12 +29,6 @@ export function Landing() {
     color: 'from-green-800 to-black'
   }];
   const stats = [{
-    value: '5000+',
-    label: 'Активных пользователей'
-  }, {
-    value: '50+',
-    label: 'Школ используют'
-  }, {
     value: '99.9%',
     label: 'Время работы'
   }, {
@@ -172,7 +166,7 @@ export function Landing() {
       {/* Stats Section */}
       <section className="py-16 bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 gap-8">
             {stats.map((stat, index) => <motion.div key={index} initial={{
             opacity: 0,
             y: 20
@@ -338,7 +332,7 @@ export function Landing() {
               }, {
                 icon: TrendingUpIcon,
                 title: 'Для учителей',
-                desc: 'Эффективно общайтесь с учениками, публикуйте объявления и отслеживайте вовлеченность'
+                desc: 'Публикуйте объявления и отслеживайте вовлеченность'
               }, {
                 icon: ShieldCheckIcon,
                 title: 'Для родителей',
