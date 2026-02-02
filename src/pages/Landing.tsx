@@ -397,7 +397,7 @@ export function Landing() {
             Готовы начать?
           </h2>
           <p className="text-xl text-green-600 mb-8">
-            Присоединяйтесь к тысячам школ, которые уже используют Shoqan Portal
+            Присоединяйтесь к Shoqan Portal
           </p>
           <Link to="/login">
             <Button variant="primary" size="lg" icon={<ZapIcon className="h-5 w-5" />} className="group">
