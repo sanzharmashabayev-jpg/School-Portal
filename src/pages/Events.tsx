@@ -126,16 +126,20 @@ export function Events() {
                       <span className="font-medium">{event.time}</span>
                     </div>
                   )}
-                  <div className="flex items-center text-sm text-green-600">
-                    <div className="p-2 rounded-lg bg-green-50 mr-3">
-                      <MapPinIcon className="h-4 w-4 text-green-700" />
+                  {event.location && (
+                    <div className="flex items-center text-sm text-green-600">
+                      <div className="p-2 rounded-lg bg-green-50 mr-3">
+                        <MapPinIcon className="h-4 w-4 text-green-700" />
+                      </div>
+                      <span className="font-medium">{event.location}</span>
                     </div>
-                    <span className="font-medium">{event.location}</span>
-                  </div>
+                  )}
                 </div>
-                <p className="mt-4 text-sm text-green-600 leading-relaxed">
-                  {event.description}
-                </p>
+                {event.description && (
+                  <p className="mt-4 text-sm text-green-600 leading-relaxed">
+                    {event.description}
+                  </p>
+                )}
                 <div className="mt-6">
                   <Button variant="outline" size="sm">
                     Подробнее
@@ -186,16 +190,20 @@ export function Events() {
                       <span className="font-medium">{olympiad.time}</span>
                     </div>
                   )}
-                  <div className="flex items-center text-sm text-green-600">
-                    <div className="p-2 rounded-lg bg-green-50 mr-3">
-                      <MapPinIcon className="h-4 w-4 text-green-700" />
+                  {olympiad.location && (
+                    <div className="flex items-center text-sm text-green-600">
+                      <div className="p-2 rounded-lg bg-green-50 mr-3">
+                        <MapPinIcon className="h-4 w-4 text-green-700" />
+                      </div>
+                      <span className="font-medium">{olympiad.location}</span>
                     </div>
-                    <span className="font-medium">{olympiad.location}</span>
-                  </div>
+                  )}
                 </div>
-                <p className="mt-4 text-sm text-green-600 leading-relaxed">
-                  {olympiad.description}
-                </p>
+                {olympiad.description && (
+                  <p className="mt-4 text-sm text-green-600 leading-relaxed">
+                    {olympiad.description}
+                  </p>
+                )}
                 <div className="mt-6 flex space-x-3">
                   {isGuest ? (
                     <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium">

@@ -119,15 +119,15 @@ const EventForm = React.memo(({
       </div>
       <div>
         <label className="block text-sm font-semibold text-green-700 mb-2">
-          Место проведения *
+          Место проведения
         </label>
-        <input type="text" value={newEvent.location} onChange={onFieldChange('location')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Актовый зал" required />
+        <input type="text" value={newEvent.location} onChange={onFieldChange('location')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Актовый зал" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-green-700 mb-2">
-          Описание *
+          Описание
         </label>
-        <textarea value={newEvent.description} onChange={onFieldChange('description')} rows={6} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Введите описание события" required />
+        <textarea value={newEvent.description} onChange={onFieldChange('description')} rows={6} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Введите описание события" />
       </div>
       <div>
         <ImageUpload
@@ -205,8 +205,8 @@ export function AdminEvents() {
       subject: event.subject || '',
       date: event.date,
       time: event.time || '',
-      location: event.location,
-      description: event.description,
+      location: event.location || '',
+      description: event.description || '',
       image: event.image || '',
       status: event.status
     });
@@ -239,7 +239,7 @@ export function AdminEvents() {
   };
 
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) || (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = filterType === 'all' || event.type === filterType;
     return matchesSearch && matchesFilter;
   });
@@ -352,10 +352,14 @@ export function AdminEvents() {
                       <strong>Время:</strong> {event.time}
                     </p>
                   )}
-                  <p>
-                    <strong>Место:</strong> {event.location}
-                  </p>
-                  <p className="line-clamp-2">{event.description}</p>
+                  {event.location && (
+                    <p>
+                      <strong>Место:</strong> {event.location}
+                    </p>
+                  )}
+                  {event.description && (
+                    <p className="line-clamp-2">{event.description}</p>
+                  )}
                 </div>
               </div>
             </Card>)}

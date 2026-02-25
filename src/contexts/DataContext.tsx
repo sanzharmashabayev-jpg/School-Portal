@@ -19,8 +19,8 @@ export interface Event {
   subject?: string; // Предмет для олимпиад/конкурсов
   date: string;
   time?: string; // Время необязательно
-  location: string;
-  description: string;
+  location?: string; // Место проведения необязательно
+  description?: string; // Описание необязательно
   image?: string;
   status: 'Активно' | 'Завершено' | 'Отменено';
 }

@@ -181,7 +181,7 @@ export function Home() {
                         {event.title}
                       </h4>
                       <p className="mt-1 text-xs text-green-600">
-                        {event.time ? `${event.time} • ` : ''}{event.location}
+                        {event.time && event.location ? `${event.time} • ${event.location}` : event.time || event.location || ''}
                       </p>
                     </div>
                   </Link>
