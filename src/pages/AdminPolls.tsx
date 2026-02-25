@@ -5,6 +5,92 @@ import { AdminModal } from '../components/Admin/AdminModal';
 import { PlusIcon, EditIcon, TrashIcon, SearchIcon, BarChart3Icon } from 'lucide-react';
 import { useData, Poll } from '../contexts/DataContext';
 
+interface PollFormProps {
+  newPoll: {
+    title: string;
+    description: string;
+    options: string[];
+    deadline: string;
+    status: 'Активен' | 'Завершен';
+  };
+  onFieldChange: (field: keyof PollFormProps['newPoll']) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onOptionChange: (index: number, value: string) => void;
+  onAddOption: () => void;
+  onRemoveOption: (index: number) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  isEdit?: boolean;
+}
+
+const PollForm = React.memo(({
+  newPoll,
+  onFieldChange,
+  onOptionChange,
+  onAddOption,
+  onRemoveOption,
+  onSubmit,
+  onCancel,
+  isEdit = false
+}: PollFormProps) => {
+  return <form onSubmit={onSubmit} className="p-6 space-y-6">
+      <div>
+        <label className="block text-sm font-semibold text-green-700 mb-2">
+          Вопрос опроса *
+        </label>
+        <input type="text" value={newPoll.title} onChange={onFieldChange('title')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Введите вопрос" required />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-green-700 mb-2">
+          Описание
+        </label>
+        <textarea value={newPoll.description} onChange={onFieldChange('description')} rows={3} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Дополнительная информация об опросе" />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-green-700 mb-2">
+          Варианты ответов *
+        </label>
+        <div className="space-y-3">
+          {newPoll.options.map((option, index) => <div key={index} className="flex items-center space-x-2">
+              <input type="text" value={option} onChange={e => onOptionChange(index, e.target.value)} className="flex-1 px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder={`Вариант ${index + 1}`} required />
+              {newPoll.options.length > 2 && <button type="button" onClick={() => onRemoveOption(index)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                  <TrashIcon className="h-5 w-5" />
+                </button>}
+            </div>)}
+        </div>
+        <button type="button" onClick={onAddOption} className="mt-3 text-sm text-red-600 hover:text-red-700 font-medium">
+          + Добавить вариант
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-green-700 mb-2">
+            Срок окончания *
+          </label>
+          <input type="date" value={newPoll.deadline} onChange={onFieldChange('deadline')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-green-700 mb-2">
+            Статус
+          </label>
+          <select value={newPoll.status} onChange={onFieldChange('status')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+            <option value="Активен">Активен</option>
+            <option value="Завершен">Завершен</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex justify-end space-x-3 pt-4 border-t border-green-200">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Отмена
+        </Button>
+        <Button type="submit" className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800">
+          {isEdit ? 'Сохранить изменения' : 'Создать опрос'}
+        </Button>
+      </div>
+    </form>;
+});
+
+PollForm.displayName = 'PollForm';
+
 export function AdminPolls() {
   const { polls, addPoll, updatePoll, deletePoll } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -18,6 +104,7 @@ export function AdminPolls() {
     deadline: '',
     status: 'Активен' as 'Активен' | 'Завершен'
   });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addPoll({
@@ -39,6 +126,7 @@ export function AdminPolls() {
       status: 'Активен'
     });
   };
+
   const handleEdit = (poll: Poll) => {
     setSelectedPoll(poll);
     setNewPoll({
@@ -50,6 +138,7 @@ export function AdminPolls() {
     });
     setShowEditModal(true);
   };
+
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPoll) return;
@@ -73,17 +162,20 @@ export function AdminPolls() {
       status: 'Активен'
     });
   };
+
   const handleDelete = (id: number) => {
     if (confirm('Вы уверены, что хотите удалить этот опрос?')) {
       deletePoll(id);
     }
   };
+
   const addOption = useCallback(() => {
     setNewPoll(prev => ({
       ...prev,
       options: [...prev.options, '']
     }));
   }, []);
+
   const removeOption = useCallback((index: number) => {
     setNewPoll(prev => {
       if (prev.options.length > 2) {
@@ -95,6 +187,7 @@ export function AdminPolls() {
       return prev;
     });
   }, []);
+
   const updateOption = useCallback((index: number, value: string) => {
     setNewPoll(prev => {
       const newOptions = [...prev.options];
@@ -102,81 +195,29 @@ export function AdminPolls() {
       return { ...prev, options: newOptions };
     });
   }, []);
+
+  const handleFieldChange = useCallback((field: keyof typeof newPoll) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setNewPoll(prev => ({ ...prev, [field]: e.target.value }));
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    if (showEditModal) {
+      setShowEditModal(false);
+      setSelectedPoll(null);
+    } else {
+      setShowAddModal(false);
+    }
+    setNewPoll({
+      title: '',
+      description: '',
+      options: ['', ''],
+      deadline: '',
+      status: 'Активен'
+    });
+  }, [showEditModal]);
+
   const filteredPolls = polls.filter(poll => poll.title.toLowerCase().includes(searchQuery.toLowerCase()) || poll.description.toLowerCase().includes(searchQuery.toLowerCase()));
-  const PollForm = ({
-    onSubmit,
-    isEdit = false
-  }: {
-    onSubmit: (e: React.FormEvent) => void;
-    isEdit?: boolean;
-  }) => <form onSubmit={onSubmit} className="p-6 space-y-6">
-      <div>
-        <label className="block text-sm font-semibold text-green-700 mb-2">
-          Вопрос опроса *
-        </label>
-        <input type="text" value={newPoll.title} onChange={e => setNewPoll(prev => ({ ...prev, title: e.target.value }))} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Введите вопрос" required />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-green-700 mb-2">
-          Описание
-        </label>
-        <textarea value={newPoll.description} onChange={e => setNewPoll(prev => ({ ...prev, description: e.target.value }))} rows={3} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Дополнительная информация об опросе" />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-green-700 mb-2">
-          Варианты ответов *
-        </label>
-        <div className="space-y-3">
-          {newPoll.options.map((option, index) => <div key={index} className="flex items-center space-x-2">
-              <input type="text" value={option} onChange={e => updateOption(index, e.target.value)} className="flex-1 px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder={`Вариант ${index + 1}`} required />
-              {newPoll.options.length > 2 && <button type="button" onClick={() => removeOption(index)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all">
-                  <TrashIcon className="h-5 w-5" />
-                </button>}
-            </div>)}
-        </div>
-        <button type="button" onClick={addOption} className="mt-3 text-sm text-red-600 hover:text-red-700 font-medium">
-          + Добавить вариант
-        </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-green-700 mb-2">
-            Срок окончания *
-          </label>
-          <input type="date" value={newPoll.deadline} onChange={e => setNewPoll(prev => ({ ...prev, deadline: e.target.value }))} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-green-700 mb-2">
-            Статус
-          </label>
-          <select value={newPoll.status} onChange={e => setNewPoll(prev => ({ ...prev, status: e.target.value as 'Активен' | 'Завершен' }))} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent">
-            <option value="Активен">Активен</option>
-            <option value="Завершен">Завершен</option>
-          </select>
-        </div>
-      </div>
-      <div className="flex justify-end space-x-3 pt-4 border-t border-green-200">
-        <Button type="button" variant="outline" onClick={() => {
-        if (isEdit) {
-          setShowEditModal(false);
-        } else {
-          setShowAddModal(false);
-        }
-        setNewPoll({
-          title: '',
-          description: '',
-          options: ['', ''],
-          deadline: '',
-          status: 'Активен'
-        });
-      }}>
-          Отмена
-        </Button>
-        <Button type="submit" className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800">
-          {isEdit ? 'Сохранить изменения' : 'Создать опрос'}
-        </Button>
-      </div>
-    </form>;
+
   return <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -256,13 +297,30 @@ export function AdminPolls() {
             </Card>)}
       </div>
       <AdminModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Создать опрос" size="lg">
-        <PollForm onSubmit={handleSubmit} />
+        <PollForm 
+          newPoll={newPoll}
+          onFieldChange={handleFieldChange}
+          onOptionChange={updateOption}
+          onAddOption={addOption}
+          onRemoveOption={removeOption}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
       </AdminModal>
       <AdminModal isOpen={showEditModal} onClose={() => {
       setShowEditModal(false);
       setSelectedPoll(null);
     }} title="Редактировать опрос" size="lg">
-        <PollForm onSubmit={handleUpdate} isEdit />
+        <PollForm 
+          newPoll={newPoll}
+          onFieldChange={handleFieldChange}
+          onOptionChange={updateOption}
+          onAddOption={addOption}
+          onRemoveOption={removeOption}
+          onSubmit={handleUpdate}
+          onCancel={handleCancel}
+          isEdit
+        />
       </AdminModal>
     </div>;
 }

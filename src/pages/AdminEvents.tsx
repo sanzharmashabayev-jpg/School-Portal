@@ -7,6 +7,159 @@ import { PostPreview } from '../components/UI/PostPreview';
 import { PlusIcon, EditIcon, TrashIcon, SearchIcon, FilterIcon, CalendarIcon, EyeIcon } from 'lucide-react';
 import { useData, Event } from '../contexts/DataContext';
 
+const subjects = [
+  'Математика',
+  'Физика',
+  'Химия',
+  'Биология',
+  'Информатика',
+  'Русский язык',
+  'Литература',
+  'История',
+  'География',
+  'Английский язык',
+  'Немецкий язык',
+  'Французский язык',
+  'Обществознание',
+  'Экономика',
+  'Астрономия',
+  'Экология',
+  'ОБЖ',
+  'Физкультура',
+  'Искусство',
+  'Музыка',
+  'Технология',
+  'Другое'
+];
+
+interface EventFormProps {
+  newEvent: {
+    title: string;
+    type: 'school' | 'olympiad';
+    subject: string;
+    date: string;
+    time: string;
+    location: string;
+    description: string;
+    image: string;
+    status: 'Активно' | 'Завершено' | 'Отменено';
+  };
+  onFieldChange: (field: keyof EventFormProps['newEvent']) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onImageChange: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  isEdit?: boolean;
+  setShowPreview: (show: boolean) => void;
+}
+
+const EventForm = React.memo(({
+  newEvent,
+  onFieldChange,
+  onImageChange,
+  onSubmit,
+  onCancel,
+  isEdit = false,
+  setShowPreview
+}: EventFormProps) => {
+  return <>
+    <form onSubmit={onSubmit} className="p-6 space-y-6">
+      <div>
+        <label className="block text-sm font-semibold text-green-700 mb-2">
+          Название события *
+        </label>
+        <input type="text" value={newEvent.title} onChange={onFieldChange('title')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Введите название события" required />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-green-700 mb-2">
+            Тип события *
+          </label>
+          <select value={newEvent.type} onChange={onFieldChange('type')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
+            <option value="school">Школьное мероприятие</option>
+            <option value="olympiad">Олимпиада/Конкурс</option>
+          </select>
+        </div>
+        {newEvent.type === 'olympiad' && (
+          <div>
+            <label className="block text-sm font-semibold text-green-700 mb-2">
+              Предмет *
+            </label>
+            <select value={newEvent.subject} onChange={onFieldChange('subject')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required={newEvent.type === 'olympiad'}>
+              <option value="">Выберите предмет</option>
+              {subjects.map(subject => (
+                <option key={subject} value={subject}>{subject}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div>
+          <label className="block text-sm font-semibold text-green-700 mb-2">
+            Статус
+          </label>
+          <select value={newEvent.status} onChange={onFieldChange('status')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent">
+            <option value="Активно">Активно</option>
+            <option value="Завершено">Завершено</option>
+            <option value="Отменено">Отменено</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-green-700 mb-2">
+            Дата *
+          </label>
+          <input type="date" value={newEvent.date} onChange={onFieldChange('date')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-green-700 mb-2">
+            Время *
+          </label>
+          <input type="text" value={newEvent.time} onChange={onFieldChange('time')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="10:00 - 15:00" required />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-green-700 mb-2">
+          Место проведения *
+        </label>
+        <input type="text" value={newEvent.location} onChange={onFieldChange('location')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Актовый зал" required />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-green-700 mb-2">
+          Описание *
+        </label>
+        <textarea value={newEvent.description} onChange={onFieldChange('description')} rows={6} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Введите описание события" required />
+      </div>
+      <div>
+        <ImageUpload
+          value={newEvent.image || ''}
+          onChange={onImageChange}
+          label="Изображение события"
+        />
+      </div>
+      <div className="flex justify-between items-center pt-4 border-t border-green-200">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={() => setShowPreview(true)}
+          icon={<EyeIcon className="h-4 w-4" />}
+        >
+          Предпросмотр
+        </Button>
+        <div className="flex space-x-3">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Отмена
+          </Button>
+          <Button type="submit" className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800">
+            {isEdit ? 'Сохранить изменения' : 'Создать событие'}
+          </Button>
+        </div>
+      </div>
+    </form>
+  </>;
+});
+
+EventForm.displayName = 'EventForm';
+
 export function AdminEvents() {
   const { events, addEvent, updateEvent, deleteEvent } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -14,6 +167,7 @@ export function AdminEvents() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'school' | 'olympiad'>('all');
+  const [showPreview, setShowPreview] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
     type: 'school' as 'school' | 'olympiad',
@@ -26,30 +180,6 @@ export function AdminEvents() {
     status: 'Активно' as 'Активно' | 'Завершено' | 'Отменено'
   });
 
-  const subjects = [
-    'Математика',
-    'Физика',
-    'Химия',
-    'Биология',
-    'Информатика',
-    'Русский язык',
-    'Литература',
-    'История',
-    'География',
-    'Английский язык',
-    'Немецкий язык',
-    'Французский язык',
-    'Обществознание',
-    'Экономика',
-    'Астрономия',
-    'Экология',
-    'ОБЖ',
-    'Физкультура',
-    'Искусство',
-    'Музыка',
-    'Технология',
-    'Другое'
-  ];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addEvent(newEvent);
@@ -66,6 +196,7 @@ export function AdminEvents() {
       status: 'Активно'
     });
   };
+
   const handleEdit = (event: Event) => {
     setSelectedEvent(event);
     setNewEvent({
@@ -81,6 +212,7 @@ export function AdminEvents() {
     });
     setShowEditModal(true);
   };
+
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
@@ -99,158 +231,47 @@ export function AdminEvents() {
       status: 'Активно'
     });
   };
+
   const handleDelete = (id: number) => {
     if (confirm('Вы уверены, что хотите удалить это событие?')) {
       deleteEvent(id);
     }
   };
+
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = filterType === 'all' || event.type === filterType;
     return matchesSearch && matchesFilter;
   });
+
   const handleEventFieldChange = useCallback((field: keyof typeof newEvent) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setNewEvent(prev => ({ ...prev, [field]: e.target.value }));
   }, []);
 
-  const EventForm = ({
-    onSubmit,
-    isEdit = false
-  }: {
-    onSubmit: (e: React.FormEvent) => void;
-    isEdit?: boolean;
-  }) => {
-    const [showPreview, setShowPreview] = useState(false);
-    
-    return <>
-      <form onSubmit={onSubmit} className="p-6 space-y-6">
-      <div>
-        <label className="block text-sm font-semibold text-green-700 mb-2">
-          Название события *
-        </label>
-        <input type="text" value={newEvent.title} onChange={handleEventFieldChange('title')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Введите название события" required />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-green-700 mb-2">
-            Тип события *
-          </label>
-          <select value={newEvent.type} onChange={handleEventFieldChange('type')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
-            <option value="school">Школьное мероприятие</option>
-            <option value="olympiad">Олимпиада/Конкурс</option>
-          </select>
-        </div>
-        {newEvent.type === 'olympiad' && (
-          <div>
-            <label className="block text-sm font-semibold text-green-700 mb-2">
-              Предмет *
-            </label>
-            <select value={newEvent.subject} onChange={handleEventFieldChange('subject')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required={newEvent.type === 'olympiad'}>
-              <option value="">Выберите предмет</option>
-              {subjects.map(subject => (
-                <option key={subject} value={subject}>{subject}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        <div>
-          <label className="block text-sm font-semibold text-green-700 mb-2">
-            Статус
-          </label>
-          <select value={newEvent.status} onChange={handleEventFieldChange('status')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent">
-            <option value="Активно">Активно</option>
-            <option value="Завершено">Завершено</option>
-            <option value="Отменено">Отменено</option>
-          </select>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-green-700 mb-2">
-            Дата *
-          </label>
-          <input type="date" value={newEvent.date} onChange={handleEventFieldChange('date')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" required />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-green-700 mb-2">
-            Время *
-          </label>
-          <input type="text" value={newEvent.time} onChange={handleEventFieldChange('time')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="10:00 - 15:00" required />
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-green-700 mb-2">
-          Место проведения *
-        </label>
-        <input type="text" value={newEvent.location} onChange={handleEventFieldChange('location')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="Актовый зал" required />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-green-700 mb-2">
-          Описание *
-        </label>
-        <textarea value={newEvent.description} onChange={handleEventFieldChange('description')} rows={6} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Введите описание события" required />
-      </div>
-      <div>
-        <ImageUpload
-          value={newEvent.image || ''}
-          onChange={(value) => setNewEvent(prev => ({ ...prev, image: value }))}
-          label="Изображение события"
-        />
-      </div>
-      <div className="flex justify-between items-center pt-4 border-t border-green-200">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => setShowPreview(true)}
-          icon={<EyeIcon className="h-4 w-4" />}
-        >
-          Предпросмотр
-        </Button>
-        <div className="flex space-x-3">
-        <Button type="button" variant="outline" onClick={() => {
-        if (isEdit) {
-          setShowEditModal(false);
-        } else {
-          setShowAddModal(false);
-        }
-        setNewEvent({
-          title: '',
-          type: 'school',
-            subject: '',
-          date: '',
-          time: '',
-          location: '',
-          description: '',
-            image: '',
-          status: 'Активно'
-        });
-      }}>
-          Отмена
-        </Button>
-        <Button type="submit" className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800">
-          {isEdit ? 'Сохранить изменения' : 'Создать событие'}
-        </Button>
-      </div>
-      </div>
-    </form>
-    
-    {showPreview && (
-      <PostPreview
-        title={newEvent.title}
-        content={newEvent.description}
-        image={newEvent.image}
-        onClose={() => setShowPreview(false)}
-        type="event"
-        eventDetails={{
-          date: newEvent.date,
-          time: newEvent.time,
-          location: newEvent.location,
-          subject: newEvent.subject
-        }}
-      />
-    )}
-  </>;
-  };
+  const handleImageChange = useCallback((value: string) => {
+    setNewEvent(prev => ({ ...prev, image: value }));
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    if (showEditModal) {
+      setShowEditModal(false);
+      setSelectedEvent(null);
+    } else {
+      setShowAddModal(false);
+    }
+    setNewEvent({
+      title: '',
+      type: 'school',
+      subject: '',
+      date: '',
+      time: '',
+      location: '',
+      description: '',
+      image: '',
+      status: 'Активно'
+    });
+  }, [showEditModal]);
+
   return <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -338,13 +359,43 @@ export function AdminEvents() {
             </Card>)}
       </div>
       <AdminModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Добавить событие" size="lg">
-        <EventForm onSubmit={handleSubmit} />
+        <EventForm 
+          newEvent={newEvent}
+          onFieldChange={handleEventFieldChange}
+          onImageChange={handleImageChange}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          setShowPreview={setShowPreview}
+        />
       </AdminModal>
       <AdminModal isOpen={showEditModal} onClose={() => {
       setShowEditModal(false);
       setSelectedEvent(null);
     }} title="Редактировать событие" size="lg">
-        <EventForm onSubmit={handleUpdate} isEdit />
+        <EventForm 
+          newEvent={newEvent}
+          onFieldChange={handleEventFieldChange}
+          onImageChange={handleImageChange}
+          onSubmit={handleUpdate}
+          onCancel={handleCancel}
+          isEdit
+          setShowPreview={setShowPreview}
+        />
       </AdminModal>
+      {showPreview && (
+        <PostPreview
+          title={newEvent.title}
+          content={newEvent.description}
+          image={newEvent.image}
+          onClose={() => setShowPreview(false)}
+          type="event"
+          eventDetails={{
+            date: newEvent.date,
+            time: newEvent.time,
+            location: newEvent.location,
+            subject: newEvent.subject
+          }}
+        />
+      )}
     </div>;
 }
