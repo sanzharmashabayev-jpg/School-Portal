@@ -118,12 +118,14 @@ export function Events() {
                     </div>
                     <span className="font-medium">{formatDate(event.date)}</span>
                   </div>
-                  <div className="flex items-center text-sm text-green-600">
-                    <div className="p-2 rounded-lg bg-green-50 mr-3">
-                      <ClockIcon className="h-4 w-4 text-green-700" />
+                  {event.time && (
+                    <div className="flex items-center text-sm text-green-600">
+                      <div className="p-2 rounded-lg bg-green-50 mr-3">
+                        <ClockIcon className="h-4 w-4 text-green-700" />
+                      </div>
+                      <span className="font-medium">{event.time}</span>
                     </div>
-                    <span className="font-medium">{event.time}</span>
-                  </div>
+                  )}
                   <div className="flex items-center text-sm text-green-600">
                     <div className="p-2 rounded-lg bg-green-50 mr-3">
                       <MapPinIcon className="h-4 w-4 text-green-700" />
@@ -176,12 +178,14 @@ export function Events() {
                     </div>
                     <span className="font-medium">{olympiad.date}</span>
                   </div>
-                  <div className="flex items-center text-sm text-green-600">
-                    <div className="p-2 rounded-lg bg-green-50 mr-3">
-                      <ClockIcon className="h-4 w-4 text-green-700" />
+                  {olympiad.time && (
+                    <div className="flex items-center text-sm text-green-600">
+                      <div className="p-2 rounded-lg bg-green-50 mr-3">
+                        <ClockIcon className="h-4 w-4 text-green-700" />
+                      </div>
+                      <span className="font-medium">{olympiad.time}</span>
                     </div>
-                    <span className="font-medium">{olympiad.time}</span>
-                  </div>
+                  )}
                   <div className="flex items-center text-sm text-green-600">
                     <div className="p-2 rounded-lg bg-green-50 mr-3">
                       <MapPinIcon className="h-4 w-4 text-green-700" />

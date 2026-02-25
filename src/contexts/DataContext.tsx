@@ -18,7 +18,7 @@ export interface Event {
   type: 'school' | 'olympiad';
   subject?: string; // Предмет для олимпиад/конкурсов
   date: string;
-  time: string;
+  time?: string; // Время необязательно
   location: string;
   description: string;
   image?: string;

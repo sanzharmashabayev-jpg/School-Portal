@@ -112,9 +112,9 @@ const EventForm = React.memo(({
         </div>
         <div>
           <label className="block text-sm font-semibold text-green-700 mb-2">
-            Время *
+            Время
           </label>
-          <input type="text" value={newEvent.time} onChange={onFieldChange('time')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="10:00 - 15:00" required />
+          <input type="text" value={newEvent.time} onChange={onFieldChange('time')} className="w-full px-4 py-3 rounded-xl border border-green-400 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="10:00 - 15:00" />
         </div>
       </div>
       <div>
@@ -204,7 +204,7 @@ export function AdminEvents() {
       type: event.type,
       subject: event.subject || '',
       date: event.date,
-      time: event.time,
+      time: event.time || '',
       location: event.location,
       description: event.description,
       image: event.image || '',
@@ -347,9 +347,11 @@ export function AdminEvents() {
                   <p>
                     <strong>Дата:</strong> {event.date}
                   </p>
-                  <p>
-                    <strong>Время:</strong> {event.time}
-                  </p>
+                  {event.time && (
+                    <p>
+                      <strong>Время:</strong> {event.time}
+                    </p>
+                  )}
                   <p>
                     <strong>Место:</strong> {event.location}
                   </p>
