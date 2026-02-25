@@ -10,7 +10,9 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   quickLogin: (isAdmin?: boolean) => void;
+  loginAsGuest: () => void;
   isAdmin: boolean;
+  isGuest: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,9 +100,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   };
 
+  // Вход как гость (только просмотр, без взаимодействия)
+  const loginAsGuest = () => {
+    const guestUser: User = {
+      id: 'guest-user-id',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: 'guest@school.ru',
+      email_confirmed_at: new Date().toISOString(),
+      phone: '',
+      confirmed_at: new Date().toISOString(),
+      last_sign_in_at: new Date().toISOString(),
+      app_metadata: {},
+      user_metadata: {
+        role: 'guest',
+        full_name: 'Гость',
+      },
+      identities: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_anonymous: false,
+    };
+
+    const guestSession: Session = {
+      access_token: 'guest-token',
+      token_type: 'bearer',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      refresh_token: 'guest-refresh-token',
+      user: guestUser,
+    };
+
+    setUser(guestUser);
+    setSession(guestSession);
+    setLoading(false);
+    localStorage.setItem('isAuthenticated', 'true');
+  };
+
   // Проверяем, является ли пользователь администратором
   // Можно использовать метаданные пользователя или отдельную таблицу ролей
   const isAdmin = user?.user_metadata?.role === 'admin' || user?.email?.endsWith('@admin.school.ru');
+  const isGuest = user?.user_metadata?.role === 'guest' || user?.id === 'guest-user-id';
 
   const value = {
     user,
@@ -110,7 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     quickLogin,
+    loginAsGuest,
     isAdmin,
+    isGuest,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

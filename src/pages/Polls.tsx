@@ -3,9 +3,11 @@ import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Polls() {
   const { polls, votePoll } = useData();
+  const { isGuest } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
   const [votedPolls, setVotedPolls] = useState<Set<number>>(new Set());
   const activePolls = useMemo(() => polls.filter(p => p.status === 'Активен'), [polls]);
@@ -80,7 +82,7 @@ export function Polls() {
                               className="h-4 w-4 text-green-800" 
                               checked={selectedOptions[poll.id] === index}
                               onChange={() => setSelectedOptions(prev => ({ ...prev, [poll.id]: index }))}
-                              disabled={votedPolls.has(poll.id)}
+                              disabled={votedPolls.has(poll.id) || isGuest}
                             />
                             <span className="ml-3 text-sm font-medium text-green-700">
                               {option.text}
@@ -106,7 +108,11 @@ export function Polls() {
                     </span>
                   </div>
                   <div className="mt-6">
-                    {votedPolls.has(poll.id) ? (
+                    {isGuest ? (
+                      <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium">
+                        ⚠ Гости могут только просматривать опросы. Войдите, чтобы проголосовать.
+                      </div>
+                    ) : votedPolls.has(poll.id) ? (
                       <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium">
                         ✓ Вы уже проголосовали
                       </div>

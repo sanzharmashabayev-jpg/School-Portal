@@ -1,8 +1,57 @@
-import React from 'react';
 import { Card } from '../components/UI/Card';
 import { Link } from 'react-router-dom';
 import { NewspaperIcon, CalendarIcon, VoteIcon, BellIcon } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+
 export function Home() {
+  const { newsItems, events } = useData();
+  
+  // Фильтруем и берем первые 3 элемента
+  const publishedNews = newsItems
+    .filter(news => news.status === 'Опубликовано')
+    .slice(0, 3);
+  
+  const activeEvents = events
+    .filter(event => event.status === 'Активно')
+    .slice(0, 3);
+
+  // Функция для форматирования даты в "время назад"
+  const getTimeAgo = (dateString: string) => {
+    let date: Date;
+    if (dateString.includes('T')) {
+      date = new Date(dateString);
+    } else {
+      date = new Date(dateString + 'T00:00:00');
+    }
+    
+    const now = new Date();
+    if (isNaN(date.getTime())) {
+      return 'недавно';
+    }
+    
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0) {
+      return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    }
+    
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffSeconds < 60) return 'только что';
+    if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'минуту' : diffMinutes < 5 ? 'минуты' : 'минут'} назад`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'час' : diffHours < 5 ? 'часа' : 'часов'} назад`;
+    if (diffDays === 1) return 'вчера';
+    if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'} назад`;
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+  };
+
+  // Функция для форматирования даты события
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
   return <div className="space-y-8">
       <div className="text-center md:text-left">
         <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900">
@@ -77,23 +126,30 @@ export function Home() {
               </h3>
             </div>
             <div className="divide-y divide-green-200">
-              {[1, 2, 3].map(item => <div key={item} className="p-6 hover:bg-white/50 transition-colors cursor-pointer">
-                  <p className="text-sm text-green-800 font-semibold">
-                    Школьные новости
-                  </p>
-                  <h4 className="mt-2 text-lg font-semibold text-green-900">
-                    Победа нашей команды на городской олимпиаде по математике
-                  </h4>
-                  <p className="mt-2 text-sm text-green-600">
-                    Наши ученики заняли первое место в городской олимпиаде по
-                    математике среди школ города.
-                  </p>
-                  <div className="mt-3 flex items-center text-xs text-green-600">
-                    <span>2 часа назад</span>
-                    <span className="mx-2">•</span>
-                    <span>15 комментариев</span>
-                  </div>
-                </div>)}
+              {publishedNews.length === 0 ? (
+                <div className="p-6 text-center text-green-600">
+                  Пока нет новостей
+                </div>
+              ) : (
+                publishedNews.map(news => (
+                  <Link key={news.id} to="/portal/news" className="block">
+                    <div className="p-6 hover:bg-white/50 transition-colors cursor-pointer">
+                      <p className="text-sm text-green-800 font-semibold">
+                        {news.category}
+                      </p>
+                      <h4 className="mt-2 text-lg font-semibold text-green-900">
+                        {news.title}
+                      </h4>
+                      <p className="mt-2 text-sm text-green-600 line-clamp-2">
+                        {news.content}
+                      </p>
+                      <div className="mt-3 flex items-center text-xs text-green-600">
+                        <span>{getTimeAgo(news.date)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
             <div className="p-6 border-t border-green-200">
               <Link to="/portal/news" className="text-sm text-green-800 font-semibold hover:text-green-900 transition-colors">
@@ -110,17 +166,27 @@ export function Home() {
               </h3>
             </div>
             <div className="divide-y divide-green-200">
-              {[1, 2, 3].map(item => <div key={item} className="p-6 hover:bg-white/50 transition-colors cursor-pointer">
-                  <p className="text-xs text-green-600 font-medium">
-                    26 октября, 2023
-                  </p>
-                  <h4 className="mt-2 text-sm font-semibold text-green-900">
-                    День открытых дверей
-                  </h4>
-                  <p className="mt-1 text-xs text-green-600">
-                    10:00 - 15:00 • Актовый зал
-                  </p>
-                </div>)}
+              {activeEvents.length === 0 ? (
+                <div className="p-6 text-center text-green-600">
+                  Пока нет событий
+                </div>
+              ) : (
+                activeEvents.map(event => (
+                  <Link key={event.id} to="/portal/events" className="block">
+                    <div className="p-6 hover:bg-white/50 transition-colors cursor-pointer">
+                      <p className="text-xs text-green-600 font-medium">
+                        {formatEventDate(event.date)}
+                      </p>
+                      <h4 className="mt-2 text-sm font-semibold text-green-900">
+                        {event.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-green-600">
+                        {event.time} • {event.location}
+                      </p>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
             <div className="p-6 border-t border-green-200">
               <Link to="/portal/events" className="text-sm text-green-800 font-semibold hover:text-green-900 transition-colors">

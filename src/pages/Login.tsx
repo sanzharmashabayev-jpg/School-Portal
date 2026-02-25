@@ -16,7 +16,7 @@ export function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, loginAsGuest } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,56 +284,51 @@ export function Login() {
                     <span className="px-2 bg-white text-green-600">или</span>
                   </div>
                 </div>
-                <motion.button whileHover={{
-                scale: 1.02
-              }} whileTap={{
-                scale: 0.98
-              }} onClick={() => navigate('/admin/login')} className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-red-500 text-red-600 font-semibold hover:bg-red-50 transition-all duration-200">
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    loginAsGuest();
+                    navigate('/portal');
+                  }}
+                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-green-500 text-green-700 font-semibold hover:bg-green-50 transition-all duration-200"
+                >
+                  <UserIcon className="h-5 w-5" />
+                  Войти как гость
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate('/admin/login')} 
+                  className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-red-500 text-red-600 font-semibold hover:bg-red-50 transition-all duration-200"
+                >
                   <ShieldCheckIcon className="h-5 w-5" />
                   Вход для администратора
                 </motion.button>
               </motion.div>
-              <motion.p initial={{
-              opacity: 0
-            }} animate={{
-              opacity: 1
-            }} transition={{
-              delay: 1.2
-            }} className="mt-6 text-center text-sm text-green-600">
-                {isSignUp ? (
-                  <>
-                    Уже есть аккаунт?{' '}
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setIsSignUp(false);
-                        setError(null);
-                        setSuccessMessage(null);
-                      }}
-                      className="font-semibold text-green-800 hover:text-green-900 transition-colors"
-                    >
-                      Войти
-                    </motion.button>
-                  </>
-                ) : (
-                  <>
-                    Нет аккаунта?{' '}
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setIsSignUp(true);
-                        setError(null);
-                        setSuccessMessage(null);
-                      }}
-                      className="font-semibold text-green-800 hover:text-green-900 transition-colors"
-                    >
-                      Зарегистрироваться
-                    </motion.button>
-                  </>
-                )}
-              </motion.p>
+              {isSignUp && (
+                <motion.p initial={{
+                opacity: 0
+              }} animate={{
+                opacity: 1
+              }} transition={{
+                delay: 1.2
+              }} className="mt-6 text-center text-sm text-green-600">
+                  Уже есть аккаунт?{' '}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setIsSignUp(false);
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    className="font-semibold text-green-800 hover:text-green-900 transition-colors"
+                  >
+                    Войти
+                  </motion.button>
+                </motion.p>
+              )}
             </div>
           </Card>
         </motion.div>

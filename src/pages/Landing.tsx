@@ -134,7 +134,7 @@ export function Landing() {
           }} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login">
                 <Button variant="primary" size="lg" icon={<ZapIcon className="h-5 w-5" />} className="group">
-                  Попробовать бесплатно
+                  Попробовать
                   <ArrowRightIcon className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -296,6 +296,13 @@ export function Landing() {
               { name: 'Мухаметжан Адия' },
               { name: 'Бостыбай Жания' },
               { name: 'Жусипкызы Жасмин' },
+              { name: 'Ахметченова Аяла' },
+              { name: 'Толепбергенов Альмансур', role: 'министр' },
+              { name: 'Болатов Арсен', role: 'благотворительность' },
+              { name: 'Лян Алика', role: 'благотворительность' },
+              { name: 'Шакиртова Рания', role: 'благотворительность' },
+              { name: 'Баедил Дария', role: 'благотворительность' },
+              { name: 'Адильбай Альтаир', role: 'благотворительность' },
             ]}
           />
         </div>
@@ -415,7 +422,15 @@ export function Landing() {
               Shoqan Portal
             </span>
             <p className="mt-4 text-green-500">
-              © 2024 Shoqan Portal. Все права защищены.
+              © 2026 Shoqan Portal. Все права защищены.
+            </p>
+            <p className="mt-3">
+              <a 
+                href="mailto:sanzhar.mashabayev@gmail.com" 
+                className="inline-block px-4 py-2 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Вопросы?
+              </a>
             </p>
             <p className="mt-3 text-white text-xl font-bold">
               Created by Sanzhar Mashabayev 8L

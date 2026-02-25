@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 
 // Типы данных
 export interface NewsItem {
@@ -90,8 +90,13 @@ const STORAGE_KEYS = {
   NEWS: 'schoolportal_news',
   EVENTS: 'schoolportal_events',
   POLLS: 'schoolportal_polls',
-  ANNOUNCEMENTS: 'schoolportal_announcements'
+  ANNOUNCEMENTS: 'schoolportal_announcements',
+  DATA_VERSION: 'schoolportal_data_version'
 };
+
+// Current data version - increment this to clear old test data
+// Incremented to 3 to clear old test data that was showing on Home page
+const CURRENT_DATA_VERSION = 3;
 
 // Default data - пустые массивы для продакшена
 const defaultNews: NewsItem[] = [];
@@ -112,6 +117,23 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
   return defaultValue;
 }
 
+// Check and migrate data version
+function checkDataVersion() {
+  const storedVersion = localStorage.getItem(STORAGE_KEYS.DATA_VERSION);
+  const version = storedVersion ? parseInt(storedVersion, 10) : 1;
+  
+  if (version < CURRENT_DATA_VERSION) {
+    // Clear old test data
+    localStorage.removeItem(STORAGE_KEYS.NEWS);
+    localStorage.removeItem(STORAGE_KEYS.EVENTS);
+    localStorage.removeItem(STORAGE_KEYS.POLLS);
+    localStorage.removeItem(STORAGE_KEYS.ANNOUNCEMENTS);
+    localStorage.removeItem('schoolportal_voted_polls'); // Also clear voted polls
+    // Update version
+    localStorage.setItem(STORAGE_KEYS.DATA_VERSION, CURRENT_DATA_VERSION.toString());
+  }
+}
+
 function saveToStorage<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -121,35 +143,88 @@ function saveToStorage<T>(key: string, value: T): void {
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  // Load initial data from localStorage or use defaults
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.NEWS, defaultNews)
-  );
-  const [events, setEvents] = useState<Event[]>(() => 
-    loadFromStorage(STORAGE_KEYS.EVENTS, defaultEvents)
-  );
-  const [polls, setPolls] = useState<Poll[]>(() => 
-    loadFromStorage(STORAGE_KEYS.POLLS, defaultPolls)
-  );
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => 
-    loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, defaultAnnouncements)
-  );
+  // Check data version once before loading data
+  const wasMigrated = React.useRef(false);
+  if (!wasMigrated.current) {
+    checkDataVersion();
+    wasMigrated.current = true;
+  }
 
-  // Save to localStorage whenever data changes
+  // Helper function to remove duplicates by ID
+  const removeDuplicates = <T extends { id: number }>(items: T[]): T[] => {
+    const seen = new Set<number>();
+    return items.filter(item => {
+      if (seen.has(item.id)) {
+        return false;
+      }
+      seen.add(item.id);
+      return true;
+    });
+  };
+
+  // Load initial data from localStorage or use defaults
+  const [newsItems, setNewsItems] = useState<NewsItem[]>(() => {
+    const loaded = loadFromStorage(STORAGE_KEYS.NEWS, defaultNews);
+    return removeDuplicates(loaded);
+  });
+  const [events, setEvents] = useState<Event[]>(() => {
+    const loaded = loadFromStorage(STORAGE_KEYS.EVENTS, defaultEvents);
+    return removeDuplicates(loaded);
+  });
+  const [polls, setPolls] = useState<Poll[]>(() => {
+    const loaded = loadFromStorage(STORAGE_KEYS.POLLS, defaultPolls);
+    return removeDuplicates(loaded);
+  });
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
+    const loaded = loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, defaultAnnouncements);
+    return removeDuplicates(loaded);
+  });
+
+  // Reset state if data was cleared during migration
+  React.useEffect(() => {
+    const storedVersion = localStorage.getItem(STORAGE_KEYS.DATA_VERSION);
+    const version = storedVersion ? parseInt(storedVersion, 10) : 1;
+    if (version >= CURRENT_DATA_VERSION) {
+      // Data was migrated, reload from storage (which should be empty now)
+      const migratedNews = loadFromStorage(STORAGE_KEYS.NEWS, defaultNews);
+      const migratedEvents = loadFromStorage(STORAGE_KEYS.EVENTS, defaultEvents);
+      const migratedPolls = loadFromStorage(STORAGE_KEYS.POLLS, defaultPolls);
+      const migratedAnnouncements = loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, defaultAnnouncements);
+      
+      if (migratedNews.length !== newsItems.length) {
+        setNewsItems(migratedNews);
+      }
+      if (migratedEvents.length !== events.length) {
+        setEvents(migratedEvents);
+      }
+      if (migratedPolls.length !== polls.length) {
+        setPolls(migratedPolls);
+      }
+      if (migratedAnnouncements.length !== announcements.length) {
+        setAnnouncements(migratedAnnouncements);
+      }
+    }
+  }, []); // Run only once on mount
+
+  // Save to localStorage whenever data changes (with duplicate removal)
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.NEWS, newsItems);
+    const uniqueNews = removeDuplicates(newsItems);
+    saveToStorage(STORAGE_KEYS.NEWS, uniqueNews);
   }, [newsItems]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.EVENTS, events);
+    const uniqueEvents = removeDuplicates(events);
+    saveToStorage(STORAGE_KEYS.EVENTS, uniqueEvents);
   }, [events]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.POLLS, polls);
+    const uniquePolls = removeDuplicates(polls);
+    saveToStorage(STORAGE_KEYS.POLLS, uniquePolls);
   }, [polls]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+    const uniqueAnnouncements = removeDuplicates(announcements);
+    saveToStorage(STORAGE_KEYS.ANNOUNCEMENTS, uniqueAnnouncements);
   }, [announcements]);
 
   // News functions
@@ -170,7 +245,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteNews = (id: number) => {
-    setNewsItems(prev => prev.filter(item => item.id !== id));
+    setNewsItems(prev => {
+      const filtered = prev.filter(item => item.id !== id);
+      // Немедленно сохраняем в localStorage
+      saveToStorage(STORAGE_KEYS.NEWS, filtered);
+      return filtered;
+    });
   };
 
   const getPublishedNews = () => {
@@ -192,7 +272,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteEvent = (id: number) => {
-    setEvents(prev => prev.filter(item => item.id !== id));
+    setEvents(prev => {
+      const filtered = prev.filter(item => item.id !== id);
+      // Немедленно сохраняем в localStorage
+      saveToStorage(STORAGE_KEYS.EVENTS, filtered);
+      return filtered;
+    });
   };
 
   const getActiveEvents = () => {
@@ -225,7 +310,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const deletePoll = (id: number) => {
-    setPolls(prev => prev.filter(item => item.id !== id));
+    setPolls(prev => {
+      const filtered = prev.filter(item => item.id !== id);
+      // Немедленно сохраняем в localStorage
+      saveToStorage(STORAGE_KEYS.POLLS, filtered);
+      return filtered;
+    });
   };
 
   const votePoll = (pollId: number, optionIndex: number) => {
@@ -272,7 +362,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setAnnouncements(prev => prev.filter(item => item.id !== id));
   };
 
-  const value = {
+  // Мемоизируем value только на основе данных, функции стабильны
+  const value = useMemo(() => ({
     // News
     newsItems,
     setNewsItems,
@@ -301,7 +392,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addAnnouncement,
     updateAnnouncement,
     deleteAnnouncement
-  };
+  }), [newsItems, events, polls, announcements]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

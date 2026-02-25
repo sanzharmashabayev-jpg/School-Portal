@@ -3,9 +3,11 @@ import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, FilterIcon } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Events() {
   const { events } = useData();
+  const { isGuest } = useAuth();
   const [activeTab, setActiveTab] = useState<'school' | 'olympiads'>('school');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   
@@ -191,9 +193,15 @@ export function Events() {
                   {olympiad.description}
                 </p>
                 <div className="mt-6 flex space-x-3">
+                  {isGuest ? (
+                    <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium">
+                      ⚠ Гости могут только просматривать события. Войдите, чтобы зарегистрироваться.
+                    </div>
+                  ) : (
                   <Button variant="primary" size="sm">
                     Зарегистрироваться
                   </Button>
+                  )}
                   <Button variant="outline" size="sm">
                     Подробнее
                   </Button>
