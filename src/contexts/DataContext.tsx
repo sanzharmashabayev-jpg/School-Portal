@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 // Типы данных
 export interface NewsItem {
@@ -16,11 +17,11 @@ export interface Event {
   id: number;
   title: string;
   type: 'school' | 'olympiad';
-  subject?: string; // Предмет для олимпиад/конкурсов
+  subject?: string;
   date: string;
-  time?: string; // Время необязательно
-  location?: string; // Место проведения необязательно
-  description?: string; // Описание необязательно
+  time?: string;
+  location?: string;
+  description?: string;
   image?: string;
   status: 'Активно' | 'Завершено' | 'Отменено';
 }
@@ -53,332 +54,353 @@ interface DataContextType {
   // News
   newsItems: NewsItem[];
   setNewsItems: React.Dispatch<React.SetStateAction<NewsItem[]>>;
-  addNews: (news: Omit<NewsItem, 'id' | 'date' | 'author'>) => void;
-  updateNews: (id: number, news: Partial<NewsItem>) => void;
-  deleteNews: (id: number) => void;
+  addNews: (news: Omit<NewsItem, 'id' | 'date' | 'author'>) => Promise<void>;
+  updateNews: (id: number, news: Partial<NewsItem>) => Promise<void>;
+  deleteNews: (id: number) => Promise<void>;
   getPublishedNews: () => NewsItem[];
+  loading: boolean;
 
   // Events
   events: Event[];
   setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
-  addEvent: (event: Omit<Event, 'id'>) => void;
-  updateEvent: (id: number, event: Partial<Event>) => void;
-  deleteEvent: (id: number) => void;
+  addEvent: (event: Omit<Event, 'id'>) => Promise<void>;
+  updateEvent: (id: number, event: Partial<Event>) => Promise<void>;
+  deleteEvent: (id: number) => Promise<void>;
   getActiveEvents: () => Event[];
 
   // Polls
   polls: Poll[];
   setPolls: React.Dispatch<React.SetStateAction<Poll[]>>;
-  addPoll: (poll: Omit<Poll, 'id' | 'totalVotes'>) => void;
-  updatePoll: (id: number, poll: Partial<Poll>) => void;
-  deletePoll: (id: number) => void;
-  votePoll: (pollId: number, optionIndex: number) => void;
+  addPoll: (poll: Omit<Poll, 'id' | 'totalVotes'>) => Promise<void>;
+  updatePoll: (id: number, poll: Partial<Poll>) => Promise<void>;
+  deletePoll: (id: number) => Promise<void>;
+  votePoll: (pollId: number, optionIndex: number) => Promise<void>;
   getActivePolls: () => Poll[];
+  hasVotedPoll: (pollId: number) => boolean;
 
   // Announcements
   announcements: Announcement[];
   setAnnouncements: React.Dispatch<React.SetStateAction<Announcement[]>>;
-  addAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => void;
-  updateAnnouncement: (id: number, announcement: Partial<Announcement>) => void;
-  deleteAnnouncement: (id: number) => void;
+  addAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
+  updateAnnouncement: (id: number, announcement: Partial<Announcement>) => Promise<void>;
+  deleteAnnouncement: (id: number) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// localStorage keys
-const STORAGE_KEYS = {
-  NEWS: 'schoolportal_news',
-  EVENTS: 'schoolportal_events',
-  POLLS: 'schoolportal_polls',
-  ANNOUNCEMENTS: 'schoolportal_announcements',
-  DATA_VERSION: 'schoolportal_data_version'
-};
-
-// Current data version - increment this to clear old test data
-// Incremented to 3 to clear old test data that was showing on Home page
-const CURRENT_DATA_VERSION = 3;
-
-// Default data - пустые массивы для продакшена
-const defaultNews: NewsItem[] = [];
-const defaultEvents: Event[] = [];
-const defaultPolls: Poll[] = [];
-const defaultAnnouncements: Announcement[] = [];
-
-// Helper functions for localStorage
-function loadFromStorage<T>(key: string, defaultValue: T): T {
-  try {
-    const item = localStorage.getItem(key);
-    if (item) {
-      return JSON.parse(item) as T;
-    }
-  } catch (error) {
-    console.error(`Error loading ${key} from localStorage:`, error);
-  }
-  return defaultValue;
+// Map DB row to app type
+function mapNewsRow(row: any): NewsItem {
+  return {
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    content: row.content,
+    image: row.image || '',
+    status: row.status,
+    date: row.date,
+    author: row.author || 'Админ',
+  };
 }
 
-// Check and migrate data version
-function checkDataVersion() {
-  const storedVersion = localStorage.getItem(STORAGE_KEYS.DATA_VERSION);
-  const version = storedVersion ? parseInt(storedVersion, 10) : 1;
-  
-  if (version < CURRENT_DATA_VERSION) {
-    // Clear old test data
-    localStorage.removeItem(STORAGE_KEYS.NEWS);
-    localStorage.removeItem(STORAGE_KEYS.EVENTS);
-    localStorage.removeItem(STORAGE_KEYS.POLLS);
-    localStorage.removeItem(STORAGE_KEYS.ANNOUNCEMENTS);
-    localStorage.removeItem('schoolportal_voted_polls'); // Also clear voted polls
-    // Update version
-    localStorage.setItem(STORAGE_KEYS.DATA_VERSION, CURRENT_DATA_VERSION.toString());
-  }
+function mapEventRow(row: any): Event {
+  return {
+    id: row.id,
+    title: row.title,
+    type: row.type,
+    subject: row.subject,
+    date: row.date,
+    time: row.time,
+    location: row.location,
+    description: row.description,
+    image: row.image,
+    status: row.status,
+  };
 }
 
-function saveToStorage<T>(key: string, value: T): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
-  }
+function mapPollRow(row: any): Poll {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    options: Array.isArray(row.options) ? row.options : [],
+    status: row.status,
+    deadline: row.deadline,
+    totalVotes: row.total_votes ?? 0,
+  };
+}
+
+function mapAnnouncementRow(row: any): Announcement {
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    type: row.type,
+    date: row.date,
+    from: row.from,
+  };
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  // Check data version once before loading data
-  const wasMigrated = React.useRef(false);
-  if (!wasMigrated.current) {
-    checkDataVersion();
-    wasMigrated.current = true;
-  }
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [polls, setPolls] = useState<Poll[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [votedPollIds, setVotedPollIds] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(true);
 
-  // Helper function to remove duplicates by ID
-  const removeDuplicates = <T extends { id: number }>(items: T[]): T[] => {
-    const seen = new Set<number>();
-    return items.filter(item => {
-      if (seen.has(item.id)) {
-        return false;
+  // Load voted polls from localStorage (for quickLogin) and Supabase (for real auth)
+  const loadVotedPolls = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase.from('poll_votes').select('poll_id').eq('user_id', user.id);
+      if (data) {
+        setVotedPollIds(new Set(data.map((r: any) => r.poll_id)));
       }
-      seen.add(item.id);
-      return true;
-    });
-  };
-
-  // Load initial data from localStorage or use defaults
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(() => {
-    const loaded = loadFromStorage(STORAGE_KEYS.NEWS, defaultNews);
-    return removeDuplicates(loaded);
-  });
-  const [events, setEvents] = useState<Event[]>(() => {
-    const loaded = loadFromStorage(STORAGE_KEYS.EVENTS, defaultEvents);
-    return removeDuplicates(loaded);
-  });
-  const [polls, setPolls] = useState<Poll[]>(() => {
-    const loaded = loadFromStorage(STORAGE_KEYS.POLLS, defaultPolls);
-    return removeDuplicates(loaded);
-  });
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
-    const loaded = loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, defaultAnnouncements);
-    return removeDuplicates(loaded);
-  });
-
-  // Reset state if data was cleared during migration
-  React.useEffect(() => {
-    const storedVersion = localStorage.getItem(STORAGE_KEYS.DATA_VERSION);
-    const version = storedVersion ? parseInt(storedVersion, 10) : 1;
-    if (version >= CURRENT_DATA_VERSION) {
-      // Data was migrated, reload from storage (which should be empty now)
-      const migratedNews = loadFromStorage(STORAGE_KEYS.NEWS, defaultNews);
-      const migratedEvents = loadFromStorage(STORAGE_KEYS.EVENTS, defaultEvents);
-      const migratedPolls = loadFromStorage(STORAGE_KEYS.POLLS, defaultPolls);
-      const migratedAnnouncements = loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, defaultAnnouncements);
-      
-      if (migratedNews.length !== newsItems.length) {
-        setNewsItems(migratedNews);
-      }
-      if (migratedEvents.length !== events.length) {
-        setEvents(migratedEvents);
-      }
-      if (migratedPolls.length !== polls.length) {
-        setPolls(migratedPolls);
-      }
-      if (migratedAnnouncements.length !== announcements.length) {
-        setAnnouncements(migratedAnnouncements);
+    } else {
+      try {
+        const saved = localStorage.getItem('schoolportal_voted_polls');
+        if (saved) {
+          setVotedPollIds(new Set(JSON.parse(saved)));
+        }
+      } catch {
+        // ignore
       }
     }
-  }, []); // Run only once on mount
+  }, []);
 
-  // Save to localStorage whenever data changes (with duplicate removal)
+  // Fetch all data from Supabase
   useEffect(() => {
-    const uniqueNews = removeDuplicates(newsItems);
-    saveToStorage(STORAGE_KEYS.NEWS, uniqueNews);
-  }, [newsItems]);
+    let cancelled = false;
 
+    async function fetchAll() {
+      setLoading(true);
+      try {
+        const [newsRes, eventsRes, pollsRes, announcementsRes] = await Promise.all([
+          supabase.from('news').select('*').order('id', { ascending: false }),
+          supabase.from('events').select('*').order('id', { ascending: false }),
+          supabase.from('polls').select('*').order('id', { ascending: false }),
+          supabase.from('announcements').select('*').order('id', { ascending: false }),
+        ]);
+
+        if (cancelled) return;
+
+        if (newsRes.data) setNewsItems(newsRes.data.map(mapNewsRow));
+        if (eventsRes.data) setEvents(eventsRes.data.map(mapEventRow));
+        if (pollsRes.data) setPolls(pollsRes.data.map(mapPollRow));
+        if (announcementsRes.data) setAnnouncements(announcementsRes.data.map(mapAnnouncementRow));
+
+        await loadVotedPolls();
+      } catch (err) {
+        console.error('Error loading data from Supabase:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchAll();
+    return () => { cancelled = true; };
+  }, [loadVotedPolls]);
+
+  // Realtime subscriptions for live updates across devices
   useEffect(() => {
-    const uniqueEvents = removeDuplicates(events);
-    saveToStorage(STORAGE_KEYS.EVENTS, uniqueEvents);
-  }, [events]);
+    const chNews = supabase.channel('news-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, () => {
+        supabase.from('news').select('*').order('id', { ascending: false }).then(({ data }) => data && setNewsItems(data.map(mapNewsRow)));
+      })
+      .subscribe();
+    const chEvents = supabase.channel('events-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
+        supabase.from('events').select('*').order('id', { ascending: false }).then(({ data }) => data && setEvents(data.map(mapEventRow)));
+      })
+      .subscribe();
+    const chPolls = supabase.channel('polls-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polls' }, () => {
+        supabase.from('polls').select('*').order('id', { ascending: false }).then(({ data }) => data && setPolls(data.map(mapPollRow)));
+      })
+      .subscribe();
+    const chAnnouncements = supabase.channel('announcements-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
+        supabase.from('announcements').select('*').order('id', { ascending: false }).then(({ data }) => data && setAnnouncements(data.map(mapAnnouncementRow)));
+      })
+      .subscribe();
 
-  useEffect(() => {
-    const uniquePolls = removeDuplicates(polls);
-    saveToStorage(STORAGE_KEYS.POLLS, uniquePolls);
-  }, [polls]);
-
-  useEffect(() => {
-    const uniqueAnnouncements = removeDuplicates(announcements);
-    saveToStorage(STORAGE_KEYS.ANNOUNCEMENTS, uniqueAnnouncements);
-  }, [announcements]);
-
-  // News functions
-  const addNews = (news: Omit<NewsItem, 'id' | 'date' | 'author'>) => {
-    const newId = newsItems.length > 0 ? Math.max(...newsItems.map(n => n.id), 0) + 1 : 1;
-    const now = new Date();
-    const newItem: NewsItem = {
-      ...news,
-      id: newId,
-      date: now.toISOString(), // Full ISO string with time
-      author: 'Админ'
+    return () => {
+      supabase.removeChannel(chNews);
+      supabase.removeChannel(chEvents);
+      supabase.removeChannel(chPolls);
+      supabase.removeChannel(chAnnouncements);
     };
-    setNewsItems(prev => [newItem, ...prev]);
-  };
+  }, []);
 
-  const updateNews = (id: number, news: Partial<NewsItem>) => {
-    setNewsItems(prev => prev.map(item => item.id === id ? { ...item, ...news } : item));
-  };
+  const hasVotedPoll = useCallback((pollId: number) => votedPollIds.has(pollId), [votedPollIds]);
 
-  const deleteNews = (id: number) => {
-    setNewsItems(prev => {
-      const filtered = prev.filter(item => item.id !== id);
-      // Немедленно сохраняем в localStorage
-      saveToStorage(STORAGE_KEYS.NEWS, filtered);
-      return filtered;
-    });
-  };
+  // News
+  const addNews = useCallback(async (news: Omit<NewsItem, 'id' | 'date' | 'author'>) => {
+    const { data, error } = await supabase.from('news').insert({
+      category: news.category,
+      title: news.title,
+      content: news.content,
+      image: news.image || '',
+      status: news.status,
+      date: new Date().toISOString(),
+      author: 'Админ',
+    }).select('id, category, title, content, image, status, date, author').single();
 
-  const getPublishedNews = () => {
-    return newsItems.filter(news => news.status === 'Опубликовано');
-  };
+    if (error) throw error;
+    setNewsItems(prev => [mapNewsRow(data), ...prev]);
+  }, []);
 
-  // Events functions
-  const addEvent = (event: Omit<Event, 'id'>) => {
-    const newId = events.length > 0 ? Math.max(...events.map(e => e.id), 0) + 1 : 1;
-    const newItem: Event = {
-      ...event,
-      id: newId
-    };
-    setEvents(prev => [newItem, ...prev]);
-  };
+  const updateNews = useCallback(async (id: number, news: Partial<NewsItem>) => {
+    const { data, error } = await supabase.from('news').update(news).eq('id', id).select().single();
+    if (error) throw error;
+    setNewsItems(prev => prev.map(item => item.id === id ? mapNewsRow(data) : item));
+  }, []);
 
-  const updateEvent = (id: number, event: Partial<Event>) => {
-    setEvents(prev => prev.map(item => item.id === id ? { ...item, ...event } : item));
-  };
+  const deleteNews = useCallback(async (id: number) => {
+    const { error } = await supabase.from('news').delete().eq('id', id);
+    if (error) throw error;
+    setNewsItems(prev => prev.filter(item => item.id !== id));
+  }, []);
 
-  const deleteEvent = (id: number) => {
-    setEvents(prev => {
-      const filtered = prev.filter(item => item.id !== id);
-      // Немедленно сохраняем в localStorage
-      saveToStorage(STORAGE_KEYS.EVENTS, filtered);
-      return filtered;
-    });
-  };
+  const getPublishedNews = useCallback(() => newsItems.filter(n => n.status === 'Опубликовано'), [newsItems]);
 
-  const getActiveEvents = () => {
-    return events.filter(event => event.status === 'Активно');
-  };
+  // Events
+  const addEvent = useCallback(async (event: Omit<Event, 'id'>) => {
+    const { data, error } = await supabase.from('events').insert({
+      title: event.title,
+      type: event.type,
+      subject: event.subject ?? null,
+      date: event.date,
+      time: event.time ?? null,
+      location: event.location ?? null,
+      description: event.description ?? null,
+      image: event.image ?? null,
+      status: event.status,
+    }).select().single();
 
-  // Polls functions
-  const addPoll = (poll: Omit<Poll, 'id' | 'totalVotes'>) => {
-    const newId = polls.length > 0 ? Math.max(...polls.map(p => p.id), 0) + 1 : 1;
+    if (error) throw error;
+    setEvents(prev => [mapEventRow(data), ...prev]);
+  }, []);
+
+  const updateEvent = useCallback(async (id: number, event: Partial<Event>) => {
+    const { data, error } = await supabase.from('events').update(event).eq('id', id).select().single();
+    if (error) throw error;
+    setEvents(prev => prev.map(item => item.id === id ? mapEventRow(data) : item));
+  }, []);
+
+  const deleteEvent = useCallback(async (id: number) => {
+    const { error } = await supabase.from('events').delete().eq('id', id);
+    if (error) throw error;
+    setEvents(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  const getActiveEvents = useCallback(() => events.filter(e => e.status === 'Активно'), [events]);
+
+  // Polls
+  const addPoll = useCallback(async (poll: Omit<Poll, 'id' | 'totalVotes'>) => {
     const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-    const newItem: Poll = {
-      ...poll,
-      id: newId,
-      totalVotes
-    };
-    setPolls(prev => [newItem, ...prev]);
-  };
+    const { data, error } = await supabase.from('polls').insert({
+      title: poll.title,
+      description: poll.description,
+      options: poll.options,
+      status: poll.status,
+      deadline: poll.deadline,
+      total_votes: totalVotes,
+    }).select().single();
 
-  const updatePoll = (id: number, poll: Partial<Poll>) => {
-    setPolls(prev => prev.map(item => {
-      if (item.id === id) {
-        const updated = { ...item, ...poll };
-        if (poll.options) {
-          updated.totalVotes = updated.options.reduce((sum, opt) => sum + opt.votes, 0);
-        }
-        return updated;
-      }
-      return item;
-    }));
-  };
+    if (error) throw error;
+    setPolls(prev => [mapPollRow(data), ...prev]);
+  }, []);
 
-  const deletePoll = (id: number) => {
-    setPolls(prev => {
-      const filtered = prev.filter(item => item.id !== id);
-      // Немедленно сохраняем в localStorage
-      saveToStorage(STORAGE_KEYS.POLLS, filtered);
-      return filtered;
-    });
-  };
+  const updatePoll = useCallback(async (id: number, poll: Partial<Poll>) => {
+    const updates: any = { ...poll };
+    if (poll.options) {
+      updates.total_votes = poll.options.reduce((sum: number, opt: PollOption) => sum + opt.votes, 0);
+    }
+    const { data, error } = await supabase.from('polls').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    setPolls(prev => prev.map(item => item.id === id ? mapPollRow(data) : item));
+  }, []);
 
-  const votePoll = (pollId: number, optionIndex: number) => {
-    setPolls(prev => prev.map(poll => {
-      if (poll.id === pollId && poll.status === 'Активен') {
-        const newOptions = [...poll.options];
-        if (newOptions[optionIndex]) {
-          newOptions[optionIndex] = {
-            ...newOptions[optionIndex],
-            votes: newOptions[optionIndex].votes + 1
-          };
-          return {
-            ...poll,
-            options: newOptions,
-            totalVotes: poll.totalVotes + 1
-          };
-        }
-      }
-      return poll;
-    }));
-  };
+  const deletePoll = useCallback(async (id: number) => {
+    const { error } = await supabase.from('polls').delete().eq('id', id);
+    if (error) throw error;
+    setPolls(prev => prev.filter(item => item.id !== id));
+  }, []);
 
-  const getActivePolls = () => {
-    return polls.filter(poll => poll.status === 'Активен');
-  };
+  const votePoll = useCallback(async (pollId: number, optionIndex: number) => {
+    const poll = polls.find(p => p.id === pollId);
+    if (!poll || poll.status !== 'Активен' || votedPollIds.has(pollId)) return;
 
-  // Announcements functions
-  const addAnnouncement = (announcement: Omit<Announcement, 'id' | 'date'>) => {
-    const newId = announcements.length > 0 ? Math.max(...announcements.map(a => a.id), 0) + 1 : 1;
-    const now = new Date();
-    const newItem: Announcement = {
-      ...announcement,
-      id: newId,
-      date: now.toISOString() // Full ISO string with time
-    };
-    setAnnouncements(prev => [newItem, ...prev]);
-  };
+    const newOptions = [...poll.options];
+    if (!newOptions[optionIndex]) return;
 
-  const updateAnnouncement = (id: number, announcement: Partial<Announcement>) => {
-    setAnnouncements(prev => prev.map(item => item.id === id ? { ...item, ...announcement } : item));
-  };
+    newOptions[optionIndex] = { ...newOptions[optionIndex], votes: newOptions[optionIndex].votes + 1 };
+    const totalVotes = poll.totalVotes + 1;
 
-  const deleteAnnouncement = (id: number) => {
+    const { error } = await supabase.from('polls').update({
+      options: newOptions,
+      total_votes: totalVotes,
+    }).eq('id', pollId);
+
+    if (error) throw error;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('poll_votes').insert({ poll_id: pollId, user_id: user.id, option_index: optionIndex });
+    } else {
+      const newSet = new Set(votedPollIds);
+      newSet.add(pollId);
+      setVotedPollIds(newSet);
+      localStorage.setItem('schoolportal_voted_polls', JSON.stringify([...newSet]));
+    }
+
+    setPolls(prev => prev.map(p => p.id === pollId ? { ...p, options: newOptions, totalVotes } : p));
+    setVotedPollIds(prev => new Set([...prev, pollId]));
+  }, [polls, votedPollIds]);
+
+  const getActivePolls = useCallback(() => polls.filter(p => p.status === 'Активен'), [polls]);
+
+  // Announcements
+  const addAnnouncement = useCallback(async (announcement: Omit<Announcement, 'id' | 'date'>) => {
+    const { data, error } = await supabase.from('announcements').insert({
+      title: announcement.title,
+      content: announcement.content,
+      type: announcement.type,
+      date: new Date().toISOString(),
+      from: announcement.from,
+    }).select().single();
+
+    if (error) throw error;
+    setAnnouncements(prev => [mapAnnouncementRow(data), ...prev]);
+  }, []);
+
+  const updateAnnouncement = useCallback(async (id: number, announcement: Partial<Announcement>) => {
+    const { data, error } = await supabase.from('announcements').update(announcement).eq('id', id).select().single();
+    if (error) throw error;
+    setAnnouncements(prev => prev.map(item => item.id === id ? mapAnnouncementRow(data) : item));
+  }, []);
+
+  const deleteAnnouncement = useCallback(async (id: number) => {
+    const { error } = await supabase.from('announcements').delete().eq('id', id);
+    if (error) throw error;
     setAnnouncements(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
-  // Мемоизируем value только на основе данных, функции стабильны
   const value = useMemo(() => ({
-    // News
     newsItems,
     setNewsItems,
     addNews,
     updateNews,
     deleteNews,
     getPublishedNews,
-    // Events
+    loading,
     events,
     setEvents,
     addEvent,
     updateEvent,
     deleteEvent,
     getActiveEvents,
-    // Polls
     polls,
     setPolls,
     addPoll,
@@ -386,13 +408,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deletePoll,
     votePoll,
     getActivePolls,
-    // Announcements
+    hasVotedPoll,
     announcements,
     setAnnouncements,
     addAnnouncement,
     updateAnnouncement,
-    deleteAnnouncement
-  }), [newsItems, events, polls, announcements]);
+    deleteAnnouncement,
+  }), [newsItems, events, polls, announcements, loading, votedPollIds, addNews, updateNews, deleteNews, getPublishedNews,
+    addEvent, updateEvent, deleteEvent, getActiveEvents, addPoll, updatePoll, deletePoll, votePoll, getActivePolls,
+    hasVotedPoll, addAnnouncement, updateAnnouncement, deleteAnnouncement]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
@@ -404,4 +428,3 @@ export function useData() {
   }
   return context;
 }
-

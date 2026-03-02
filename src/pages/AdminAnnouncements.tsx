@@ -18,16 +18,22 @@ export function AdminAnnouncements() {
     type: 'info' as 'info' | 'warning' | 'event',
     from: ''
   });
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addAnnouncement(newAnnouncement);
-    setShowAddModal(false);
-    setNewAnnouncement({
-      title: '',
-      content: '',
-      type: 'info',
-      from: ''
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await addAnnouncement(newAnnouncement);
+      setShowAddModal(false);
+      setNewAnnouncement({ title: '', content: '', type: 'info', from: '' });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при добавлении объявления');
+    } finally {
+      setSaving(false);
+    }
   };
   const handleEdit = (announcement: Announcement) => {
     setSelectedAnnouncement(announcement);
@@ -39,22 +45,29 @@ export function AdminAnnouncements() {
     });
     setShowEditModal(true);
   };
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAnnouncement) return;
-    updateAnnouncement(selectedAnnouncement.id, newAnnouncement);
-    setShowEditModal(false);
-    setSelectedAnnouncement(null);
-    setNewAnnouncement({
-      title: '',
-      content: '',
-      type: 'info',
-      from: ''
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await updateAnnouncement(selectedAnnouncement.id, newAnnouncement);
+      setShowEditModal(false);
+      setSelectedAnnouncement(null);
+      setNewAnnouncement({ title: '', content: '', type: 'info', from: '' });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при обновлении объявления');
+    } finally {
+      setSaving(false);
+    }
   };
-  const handleDelete = (id: number) => {
-    if (confirm('Вы уверены, что хотите удалить это объявление?')) {
-      deleteAnnouncement(id);
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить это объявление?')) return;
+    setError(null);
+    try {
+      await deleteAnnouncement(id);
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при удалении объявления');
     }
   };
   const filteredAnnouncements = announcements.filter(announcement => {
@@ -125,6 +138,11 @@ export function AdminAnnouncements() {
       </div>
     </form>;
   return <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-green-900">

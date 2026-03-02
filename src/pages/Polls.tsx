@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
@@ -6,33 +6,23 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Polls() {
-  const { polls, votePoll } = useData();
+  const { polls, votePoll, hasVotedPoll } = useData();
   const { isGuest } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
-  const [votedPolls, setVotedPolls] = useState<Set<number>>(new Set());
+  const [voting, setVoting] = useState(false);
   const activePolls = useMemo(() => polls.filter(p => p.status === 'Активен'), [polls]);
   const completedPolls = useMemo(() => polls.filter(p => p.status === 'Завершен'), [polls]);
   
-  // Load voted polls from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('schoolportal_voted_polls');
-    if (saved) {
-      try {
-        setVotedPolls(new Set(JSON.parse(saved)));
-      } catch (e) {
-        console.error('Error loading voted polls:', e);
-      }
-    }
-  }, []);
-  
-  const handleVote = (pollId: number) => {
+  const handleVote = async (pollId: number) => {
     const optionIndex = selectedOptions[pollId];
-    if (optionIndex !== undefined && !votedPolls.has(pollId)) {
-      votePoll(pollId, optionIndex);
-      const newVotedPolls = new Set(votedPolls);
-      newVotedPolls.add(pollId);
-      setVotedPolls(newVotedPolls);
-      localStorage.setItem('schoolportal_voted_polls', JSON.stringify([...newVotedPolls]));
+    if (optionIndex === undefined || hasVotedPoll(pollId)) return;
+    setVoting(true);
+    try {
+      await votePoll(pollId, optionIndex);
+    } catch (e) {
+      console.error('Error voting:', e);
+    } finally {
+      setVoting(false);
     }
   };
   
@@ -82,7 +72,7 @@ export function Polls() {
                               className="h-4 w-4 text-green-800" 
                               checked={selectedOptions[poll.id] === index}
                               onChange={() => setSelectedOptions(prev => ({ ...prev, [poll.id]: index }))}
-                              disabled={votedPolls.has(poll.id) || isGuest}
+                              disabled={hasVotedPoll(poll.id) || isGuest}
                             />
                             <span className="ml-3 text-sm font-medium text-green-700">
                               {option.text}
@@ -112,7 +102,7 @@ export function Polls() {
                       <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium">
                         ⚠ Гости могут только просматривать опросы. Войдите, чтобы проголосовать.
                       </div>
-                    ) : votedPolls.has(poll.id) ? (
+                    ) : hasVotedPoll(poll.id) ? (
                       <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium">
                         ✓ Вы уже проголосовали
                       </div>
@@ -120,9 +110,9 @@ export function Polls() {
                       <Button 
                         variant="primary" 
                         onClick={() => handleVote(poll.id)}
-                        disabled={selectedOptions[poll.id] === undefined}
+                        disabled={selectedOptions[poll.id] === undefined || voting}
                       >
-                        Проголосовать
+                        {voting ? 'Голосование...' : 'Проголосовать'}
                       </Button>
                     )}
                   </div>

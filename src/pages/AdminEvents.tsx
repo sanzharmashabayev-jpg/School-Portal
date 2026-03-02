@@ -160,6 +160,18 @@ const EventForm = React.memo(({
 
 EventForm.displayName = 'EventForm';
 
+const emptyEvent = {
+  title: '',
+  type: 'school' as const,
+  subject: '',
+  date: '',
+  time: '',
+  location: '',
+  description: '',
+  image: '',
+  status: 'Активно' as const
+};
+
 export function AdminEvents() {
   const { events, addEvent, updateEvent, deleteEvent } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -168,33 +180,23 @@ export function AdminEvents() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'school' | 'olympiad'>('all');
   const [showPreview, setShowPreview] = useState(false);
-  const [newEvent, setNewEvent] = useState({
-    title: '',
-    type: 'school' as 'school' | 'olympiad',
-    subject: '',
-    date: '',
-    time: '',
-    location: '',
-    description: '',
-    image: '',
-    status: 'Активно' as 'Активно' | 'Завершено' | 'Отменено'
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [newEvent, setNewEvent] = useState({ ...emptyEvent });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addEvent(newEvent);
-    setShowAddModal(false);
-    setNewEvent({
-      title: '',
-      type: 'school',
-      subject: '',
-      date: '',
-      time: '',
-      location: '',
-      description: '',
-      image: '',
-      status: 'Активно'
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await addEvent(newEvent);
+      setShowAddModal(false);
+      setNewEvent({ ...emptyEvent });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при добавлении события');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (event: Event) => {
@@ -213,28 +215,30 @@ export function AdminEvents() {
     setShowEditModal(true);
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
-    updateEvent(selectedEvent.id, newEvent);
-    setShowEditModal(false);
-    setSelectedEvent(null);
-    setNewEvent({
-      title: '',
-      type: 'school',
-      subject: '',
-      date: '',
-      time: '',
-      location: '',
-      description: '',
-      image: '',
-      status: 'Активно'
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await updateEvent(selectedEvent.id, newEvent);
+      setShowEditModal(false);
+      setSelectedEvent(null);
+      setNewEvent({ ...emptyEvent });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при обновлении события');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('Вы уверены, что хотите удалить это событие?')) {
-      deleteEvent(id);
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить это событие?')) return;
+    setError(null);
+    try {
+      await deleteEvent(id);
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при удалении события');
     }
   };
 
@@ -259,20 +263,16 @@ export function AdminEvents() {
     } else {
       setShowAddModal(false);
     }
-    setNewEvent({
-      title: '',
-      type: 'school',
-      subject: '',
-      date: '',
-      time: '',
-      location: '',
-      description: '',
-      image: '',
-      status: 'Активно'
-    });
+    setNewEvent({ ...emptyEvent });
+    setError(null);
   }, [showEditModal]);
 
   return <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-green-900">

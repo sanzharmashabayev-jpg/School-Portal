@@ -137,12 +137,14 @@ const NewsForm = React.memo(function NewsFormComponent({
 NewsForm.displayName = 'NewsForm';
 
 export function AdminNews() {
-  const { newsItems, addNews, updateNews, deleteNews } = useData();
+  const { newsItems, addNews, updateNews, deleteNews, loading } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'Опубликовано' | 'Черновик'>('all');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [newNews, setNewNews] = useState({
     title: '',
     category: '',
@@ -150,17 +152,19 @@ export function AdminNews() {
     image: '',
     status: 'Опубликовано' as 'Опубликовано' | 'Черновик'
   });
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addNews(newNews);
-    setShowAddModal(false);
-    setNewNews({
-      title: '',
-      category: '',
-      content: '',
-      image: '',
-      status: 'Опубликовано'
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await addNews(newNews);
+      setShowAddModal(false);
+      setNewNews({ title: '', category: '', content: '', image: '', status: 'Опубликовано' });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при добавлении новости');
+    } finally {
+      setSaving(false);
+    }
   };
   const handleEdit = (news: NewsItem) => {
     setSelectedNews(news);
@@ -173,23 +177,29 @@ export function AdminNews() {
     });
     setShowEditModal(true);
   };
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedNews) return;
-    updateNews(selectedNews.id, newNews);
-    setShowEditModal(false);
-    setSelectedNews(null);
-    setNewNews({
-      title: '',
-      category: '',
-      content: '',
-      image: '',
-      status: 'Опубликовано'
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await updateNews(selectedNews.id, newNews);
+      setShowEditModal(false);
+      setSelectedNews(null);
+      setNewNews({ title: '', category: '', content: '', image: '', status: 'Опубликовано' });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при обновлении новости');
+    } finally {
+      setSaving(false);
+    }
   };
-  const handleDelete = (id: number) => {
-    if (confirm('Вы уверены, что хотите удалить эту новость?')) {
-      deleteNews(id);
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту новость?')) return;
+    setError(null);
+    try {
+      await deleteNews(id);
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при удалении новости');
     }
   };
   const filteredNews = newsItems.filter(news => {
@@ -270,6 +280,11 @@ export function AdminNews() {
             </Card>)}
       </div>
 
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
       <AdminModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Добавить новость" size="lg">
         <NewsForm 
           onSubmit={handleSubmit} 
@@ -278,12 +293,14 @@ export function AdminNews() {
           setShowAddModal={setShowAddModal}
           setShowEditModal={setShowEditModal}
         />
+        {saving && <p className="text-green-600 text-sm mt-2">Сохранение...</p>}
       </AdminModal>
 
       <AdminModal isOpen={showEditModal} onClose={() => {
-      setShowEditModal(false);
-      setSelectedNews(null);
-    }} title="Редактировать новость" size="lg">
+        setShowEditModal(false);
+        setSelectedNews(null);
+        setError(null);
+      }} title="Редактировать новость" size="lg">
         <NewsForm 
           onSubmit={handleUpdate} 
           isEdit 

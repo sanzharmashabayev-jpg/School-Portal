@@ -105,26 +105,31 @@ export function AdminPolls() {
     status: 'Активен' as 'Активен' | 'Завершен'
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addPoll({
-      title: newPoll.title,
-      description: newPoll.description,
-      options: newPoll.options.filter(opt => opt.trim()).map(opt => ({
-        text: opt,
-        votes: 0
-      })),
-      status: newPoll.status,
-      deadline: newPoll.deadline
-    });
-    setShowAddModal(false);
-    setNewPoll({
-      title: '',
-      description: '',
-      options: ['', ''],
-      deadline: '',
-      status: 'Активен'
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await addPoll({
+        title: newPoll.title,
+        description: newPoll.description,
+        options: newPoll.options.filter(opt => opt.trim()).map(opt => ({
+          text: opt,
+          votes: 0
+        })),
+        status: newPoll.status,
+        deadline: newPoll.deadline
+      });
+      setShowAddModal(false);
+      setNewPoll({ title: '', description: '', options: ['', ''], deadline: '', status: 'Активен' });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при создании опроса');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (poll: Poll) => {
@@ -139,33 +144,39 @@ export function AdminPolls() {
     setShowEditModal(true);
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPoll) return;
-    updatePoll(selectedPoll.id, {
-      title: newPoll.title,
-      description: newPoll.description,
-      options: newPoll.options.filter(opt => opt.trim()).map((opt, idx) => ({
-        text: opt,
-        votes: selectedPoll.options[idx]?.votes || 0
-      })),
-      deadline: newPoll.deadline,
-      status: newPoll.status
-    });
-    setShowEditModal(false);
-    setSelectedPoll(null);
-    setNewPoll({
-      title: '',
-      description: '',
-      options: ['', ''],
-      deadline: '',
-      status: 'Активен'
-    });
+    setError(null);
+    setSaving(true);
+    try {
+      await updatePoll(selectedPoll.id, {
+        title: newPoll.title,
+        description: newPoll.description,
+        options: newPoll.options.filter(opt => opt.trim()).map((opt, idx) => ({
+          text: opt,
+          votes: selectedPoll.options[idx]?.votes || 0
+        })),
+        deadline: newPoll.deadline,
+        status: newPoll.status
+      });
+      setShowEditModal(false);
+      setSelectedPoll(null);
+      setNewPoll({ title: '', description: '', options: ['', ''], deadline: '', status: 'Активен' });
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при обновлении опроса');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('Вы уверены, что хотите удалить этот опрос?')) {
-      deletePoll(id);
+  const handleDelete = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этот опрос?')) return;
+    setError(null);
+    try {
+      await deletePoll(id);
+    } catch (err: any) {
+      setError(err?.message || 'Ошибка при удалении опроса');
     }
   };
 
@@ -219,6 +230,11 @@ export function AdminPolls() {
   const filteredPolls = polls.filter(poll => poll.title.toLowerCase().includes(searchQuery.toLowerCase()) || poll.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-green-900">
