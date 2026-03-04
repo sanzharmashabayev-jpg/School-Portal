@@ -173,6 +173,27 @@ export function Login() {
                   {isSignUp ? 'Создайте аккаунт для доступа к Shoqan Portal' : 'Войдите, чтобы получить доступ к Shoqan Portal'}
                 </motion.p>
               </div>
+              {/* Кнопка гостя — на первый план, крупнее */}
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  loginAsGuest();
+                  navigate('/portal');
+                }}
+                className="mb-6 w-full flex items-center justify-center gap-3 px-6 py-5 rounded-2xl bg-gradient-to-r from-green-600 to-green-800 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <UserIcon className="h-7 w-7" />
+                Нынешний вход — в систему без логина
+              </motion.button>
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-green-400"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-green-600">или</span>
+                </div>
+              </div>
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -265,7 +286,7 @@ export function Login() {
                 delay: 1
               }}>
                   <Button type="submit" variant="primary" className="w-full" size="lg" disabled={loading}>
-                    {loading ? (isSignUp ? 'Регистрация...' : 'Вход...') : (isSignUp ? 'Зарегистрироваться' : 'Войти')}
+                    {loading ? (isSignUp ? 'Регистрация...' : 'Вход...') : (isSignUp ? 'Зарегистрироваться' : 'Войти с логином (скоро...)')}
                   </Button>
                 </motion.div>
               </form>
@@ -276,31 +297,11 @@ export function Login() {
             }} transition={{
               delay: 1.1
             }} className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-green-400"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-green-600">или</span>
-                  </div>
-                </div>
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    loginAsGuest();
-                    navigate('/portal');
-                  }}
-                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-green-500 text-green-700 font-semibold hover:bg-green-50 transition-all duration-200"
-                >
-                  <UserIcon className="h-5 w-5" />
-                  Войти как гость
-                </motion.button>
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate('/admin/login')} 
-                  className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-red-500 text-red-600 font-semibold hover:bg-red-50 transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-red-500 text-red-600 font-semibold hover:bg-red-50 transition-all duration-200"
                 >
                   <ShieldCheckIcon className="h-5 w-5" />
                   Вход для администратора
